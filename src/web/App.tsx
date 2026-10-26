@@ -56,9 +56,9 @@ export function App() {
     setBusy(true);
     setProblem(null);
     try {
-      const { answer, words, charged, placeholder } = await api.answer(call.text, call.sort, parts, 0);
+      const { answer, words, charged } = await api.answer(call.text, call.sort, parts, 0);
       const capped = charged.total > quote.total ? quote : charged;
-      update(call.id, { parts, quote, charged: capped, answer, words, placeholder }, { balance: store.balance - (capped.total - SCHEDULE.sort) });
+      update(call.id, { parts, quote, charged: capped, answer, words }, { balance: store.balance - (capped.total - SCHEDULE.sort) });
       setView({ name: 'answer', id: call.id });
     } catch (e) {
       setProblem((e as Error).message);
@@ -72,8 +72,8 @@ export function App() {
     if (!call.parts) return;
     setBusy(true);
     try {
-      const { answer, words, placeholder } = await api.answer(call.text, call.sort, call.parts, 0);
-      update(call.id, { answer, words, placeholder, redo: false, flagged: false, receipt: undefined, pick: undefined });
+      const { answer, words } = await api.answer(call.text, call.sort, call.parts, 0);
+      update(call.id, { answer, words, redo: false, flagged: false, receipt: undefined, pick: undefined });
       setView({ name: 'answer', id: call.id });
     } catch (e) {
       setProblem((e as Error).message);

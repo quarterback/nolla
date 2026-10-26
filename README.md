@@ -16,7 +16,7 @@ cp .dev.vars.example .dev.vars
 npm run dev
 ```
 
-Open http://localhost:8787. With `DEV_MODE=1` and no model set, four calls from the design canvas answer from a script, so the whole desk works without a GPU. Put `MODAL_BASE_URL` and `MODAL_TOKEN` in `.dev.vars` to use the real model.
+Open http://localhost:8787. With `DEV_MODE=1` and no model set, four calls answer from a script, so the whole desk works without a GPU. Put `MODAL_BASE_URL` and `MODAL_TOKEN` in `.dev.vars` to use the real model.
 
 ## Deploy
 

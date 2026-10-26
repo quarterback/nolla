@@ -86,7 +86,7 @@ api.post('/answer', async (c) => {
   const slips = answer.desks.length ? 1 : 0;
   const sources = Math.min(answer.sources.length, parts.sources);
   const charged = price({ slips, sources, words, check: parts.check }, earlierTurns);
-  return c.json({ answer, words, charged, placeholder: !modelConfigured(c.env) });
+  return c.json({ answer, words, charged });
 });
 
 /** The manager desk: a separate call with a separate prompt. It checks; the
