@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { SCHEDULE, options, price, usd, type Option } from '../shared/desk';
 import type { Parts } from '../shared/desk-schemas';
 import { fmt, tkn } from './store';
-import { Pieces } from './Classification';
 
 interface Props {
   busy: boolean;
@@ -25,6 +24,7 @@ export function CallForm({ busy, model, onAsk, preset }: Props) {
   const [pick, setPick] = useState<Option['key']>('sources');
   const opts = options('route');
   const chosen = opts.find((o) => o.key === pick) ?? opts[2];
+  const quote = price(chosen, 0);
   const ready = text.trim().length >= 3;
 
   return (
@@ -32,14 +32,13 @@ export function CallForm({ busy, model, onAsk, preset }: Props) {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          if (ready) onAsk(text.trim(), { slips: chosen.slips, sources: chosen.sources, words: chosen.words, check: chosen.check }, chosen.label);
+          if (ready && !busy) onAsk(text.trim(), { slips: chosen.slips, sources: chosen.sources, words: chosen.words, check: chosen.check }, chosen.label);
         }}
       >
         <label htmlFor="call" className="label">
           The call
         </label>
         <textarea id="call" rows={3} value={text} onChange={(e) => setText(e.target.value)} placeholder="The question, as you would say it" disabled={busy} autoFocus />
-        <Pieces text={text} />
         <ul className="optionlist">
           {opts.map((o) => {
             const p = price(o, 0);
@@ -48,17 +47,24 @@ export function CallForm({ busy, model, onAsk, preset }: Props) {
                 <button type="button" className={`option ${pick === o.key ? 'on' : ''}`} disabled={busy} onClick={() => setPick(o.key)} aria-pressed={pick === o.key}>
                   <span className="o-label">{o.label}</span>
                   <span className="o-price num">{tkn(p.total)}</span>
-                  <span className="o-formula">{p.formula.toLowerCase().replace(/about /g, '')}</span>
                 </button>
               </li>
             );
           })}
         </ul>
+        <dl className="quote-lines" aria-label={chosen.label}>
+          {quote.lines.map((line) => (
+            <div key={line.label}>
+              <dt>{line.label}</dt>
+              <dd className="num">{tkn(line.tkn)}</dd>
+            </div>
+          ))}
+        </dl>
         <button type="submit" className="primary wide" disabled={busy || !ready}>
-          {busy ? 'Sorting' : `Ask · ${tkn(price(chosen, 0).total)}`}
+          {busy ? 'Sorting' : `Ask · ${tkn(quote.total)}`}
         </button>
         <p className="machine">
-          sort {tkn(SCHEDULE.sort)} charged on ask · about ${fmt(usd(price(chosen, 0).total), 3)}
+          sort {tkn(SCHEDULE.sort)} charged on ask · about ${fmt(usd(quote.total), 3)}
           {model === 'starting' ? ' · model starting' : model === 'scripted' ? ' · scripted answers' : ''}
         </p>
       </form>

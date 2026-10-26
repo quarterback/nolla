@@ -23,23 +23,3 @@ export function MachineLine({ call, extra }: { call: Call; extra?: string }) {
     </p>
   );
 }
-
-/** The call split into pieces, as the desk reads it. */
-export function Pieces({ text, tail }: { text: string; tail?: string }) {
-  const pieces = text.match(/\s?\S{1,4}/g) ?? [];
-  if (!pieces.length) return null;
-  return (
-    <div className="pieces-wrap">
-      <div className="pieces" aria-label="The call in pieces">
-        {pieces.map((p, i) => (
-          <span key={i} className="piece">
-            {p.trim()}
-          </span>
-        ))}
-      </div>
-      <p className="machine">
-        {pieces.length} pieces read{tail ? ` · ${tail}` : ''}
-      </p>
-    </div>
-  );
-}
