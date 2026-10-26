@@ -20,6 +20,8 @@ Open http://localhost:8787. With `DEV_MODE=1` and no model set, four calls answe
 
 ## Deploy
 
+A push to `main` deploys through GitHub Actions (`.github/workflows/deploy.yml`). Add two repository secrets once: `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. Deploying by hand works too:
+
 1. Deploy the model: `modal/README.md`.
 2. In Cloudflare Zero Trust, add an Access application for `0000th.ai` with an email allowlist. Copy the team domain and the application audience tag into `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` in `wrangler.toml`.
 3. `wrangler secret put MODAL_BASE_URL` and `wrangler secret put MODAL_TOKEN`.
