@@ -1,9 +1,9 @@
 # Deploys the Worker to Cloudflare on every push to main.
 # Needs two repository secrets: CLOUDFLARE_API_TOKEN (a token with Workers
 # Scripts: Edit and Zone: Read on the zones) and CLOUDFLARE_ACCOUNT_ID.
-# Two more, MODAL_BASE_URL and MODAL_TOKEN, connect the model: when they are
-# set, the deploy copies them into the Worker and the desk stops answering
-# from the script.
+# A third, MODAL_TOKEN, connects the model: when it is set, the deploy copies
+# it into the Worker, which takes the endpoint URL from wrangler.toml, and the
+# desk stops answering from the script.
 name: Deploy
 
 on:
@@ -30,13 +30,11 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          MODAL_BASE_URL: ${{ secrets.MODAL_BASE_URL }}
           MODAL_TOKEN: ${{ secrets.MODAL_TOKEN }}
         run: |
-          if [ -n "$MODAL_BASE_URL" ] && [ -n "$MODAL_TOKEN" ]; then
-            printf '%s' "$MODAL_BASE_URL" | npx wrangler secret put MODAL_BASE_URL
+          if [ -n "$MODAL_TOKEN" ]; then
             printf '%s' "$MODAL_TOKEN" | npx wrangler secret put MODAL_TOKEN
             echo "model connected"
           else
-            echo "no model secrets; the desk answers from the script"
+            echo "no model token; the desk answers from the script"
           fi
