@@ -31,7 +31,6 @@ Ron Bronson owns this policy. His latest explicit instructions take precedence o
 - Restrictive tags: "only when," "only what," "just." State the rule directly.
 - Lists of three by habit. List what the reader needs, however many that is.
 - Sentences that explain the desk's reasoning or reassure the reader. State the fact and stop.
-- Text from the design canvas or any assistant reply, until Ron approves it.
 
 ## Writing mechanics
 
@@ -45,7 +44,6 @@ Ron Bronson owns this policy. His latest explicit instructions take precedence o
 - Never invent a source, a phone number, hours or an address.
 - Name a real public desk only when a source confirms it exists and does what is claimed.
 - Decisions an agent may not revise: the price schedule, the refund limits, the allowance, the voice rules in the `0000th` skill, and the look Ron approves.
-- Ron writes his own site copy, bios and blog posts. Agents do not draft them. When Ron asks for edits to his drafts, keep his wording and sentences exactly as written and change only what he asked.
 
 ## Publishing checks
 

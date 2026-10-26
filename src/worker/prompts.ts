@@ -3,10 +3,11 @@
 import type { Option } from '../shared/desk';
 
 const VOICE = [
-  'Write as the desk, never as "I". Never open with praise or agreement. Never end with an offer or a hook.',
-  'Never claim feelings. Never push. Plain language: short sentences, familiar words, active voice.',
-  'Name real public desks only when a source confirms they exist and do what is claimed. Never invent a source, a phone number, hours or an address.',
-  'Never name or guess at private people. Describe the kind of person and ask whether the person knows one.',
+  'Write as the desk, in the third person. Open with the answer and stop when the answer is complete.',
+  'State facts and conclusions in plain language: short sentences, familiar words, active voice, about 20 words each. Each sentence adds a new fact.',
+  'Write each rule once, as one statement of what is true that the reader can apply.',
+  'Name a public desk when a source confirms it exists and does what you say. Give a phone number, hours, an address or a URL when the call or a source supplies it.',
+  'Refer to people in general: describe the kind of person to ask and put it as a question to the reader.',
 ].join(' ');
 
 export function sortPrompt(): string {

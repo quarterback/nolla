@@ -1,6 +1,6 @@
 # nolla
 
-A reference desk with a price list, behind 0000th.ai for a few invited people. Each call is sorted, priced in the open before anything runs, and sent to the people who handle it. The desk answers only what belongs there. When it gets something wrong, a counter refunds small amounts on the spot and a separate manager desk reviews the rest.
+A reference desk with a price list, behind 0000th.ai for a few invited people. Each call is sorted, priced before anything runs, and sent to the people who handle it. Some calls get an answer at the desk. When the desk gets something wrong, a counter refunds small amounts on the spot and a separate manager desk reviews larger ones.
 
 Three parts:
 

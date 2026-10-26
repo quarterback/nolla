@@ -16,14 +16,14 @@ const deposit: Scripted = {
   answer: {
     short: 'Usually no. Oregon law bars deductions for ordinary wear and tear. A landlord who keeps a deposit wrongly can owe twice the amount.',
     known: [
-      { text: 'A landlord can deduct for damage beyond normal use, such as stains, burns, tears or pet damage. Carpet worn thin from walking counts as normal use.', source: 1 },
+      { text: 'A landlord can deduct for stains, burns, tears, and pet damage. Walking wears carpet thin, and that wear is normal use.', source: 1 },
       { text: 'Carpet cleaning can be charged when two things are true: the landlord machine cleaned the carpet before you moved in, and your written lease says cleaning is charged in every case.', source: 1 },
       { text: 'The landlord has 31 days after you move out to send a written list of deductions and return the rest.', source: 1 },
     ],
-    changes_if: ['Your lease charges for carpet cleaning in every case.', 'The carpet has stains, burns or tears.', '31 days have passed with no written list.'],
+    changes_if: ['Your lease charges for carpet cleaning in every case.', 'The carpet has stains, burns, or tears.', '31 days have passed with no written list.'],
     desks: [
-      { name: 'Community Alliance of Tenants', what: 'Statewide renters\' rights hotline', ask: 'Does carpet wear count as normal use?', cost: 'Free', bring: 'Lease, move out photos', url: 'https://www.oregoncat.org' },
-      { name: 'Small claims court', what: 'Where deposit disputes usually end up if a letter does not work.', ask: 'How to file for a kept deposit', cost: 'A filing fee, listed on your county court website', bring: 'The lease, photos and any letters', url: '' },
+      { name: 'Community Alliance of Tenants', what: 'Statewide renters\' rights hotline', ask: 'Does carpet wear count as normal use?', cost: 'Free', bring: 'Lease, move-out photos', url: 'https://www.oregoncat.org' },
+      { name: 'Small claims court', what: 'Where deposit disputes usually end up if a letter does not work.', ask: 'How to file for a kept deposit', cost: 'A filing fee, listed on your county court website', bring: 'The lease, photos, and any letters', url: '' },
     ],
     ask_someone: 'Do you know anyone who has disputed a deposit? Ask them what they sent and what happened.',
     question_back: {
@@ -31,7 +31,7 @@ const deposit: Scripted = {
       choices: [
         { label: 'Yes', next: 'Compare each deduction to the rules above. For any that look like normal wear, send the landlord a short letter asking for that amount back within 10 days. Keep a copy.' },
         { label: 'No', next: 'Write to the landlord asking for the full deposit, and say no written list arrived within 31 days. The tenants hotline can check your letter.' },
-        { label: 'Not sure', next: 'Check your mail and email from the landlord since move out. The list has to be in writing.' },
+        { label: 'Not sure', next: 'Check your mail and email from the landlord since you moved out. The list has to be in writing.' },
       ],
     },
     sources: [
@@ -45,7 +45,7 @@ const toilet: Scripted = {
   match: /toilet|flush/i,
   sort: { sort: 'desk', category: 'Home repair', place: '', code: 'HOM 2.3', path: ['Home repair', 'Plumbing', 'Toilets'] },
   answer: {
-    short: 'A running toilet comes from the water level, the flapper, its chain or the fill valve. The first three take about fifteen minutes and no tools.',
+    short: 'A running toilet comes from the water level, the flapper, its chain, or the fill valve. The first three take about 15 minutes and no tools.',
     known: [
       { text: 'Take the lid off the tank and flush once so you can watch.', source: 0 },
       { text: '1. Water spills into the tall tube: the water level is set too high. Turn the screw on the fill valve, or slide the float down, until the water stops about an inch below the top of the tube.', source: 0 },
@@ -66,13 +66,13 @@ const business: Scripted = {
   match: /shop|business|open a|cafe|tea/i,
   sort: { sort: 'both', category: 'Small business', place: 'Portland', code: 'BUS 1.1', path: ['Small business', 'Starting', 'Will it pay'] },
   answer: {
-    short: 'It depends on three numbers you can find this month: the rent, what each drink earns after costs, and how many drinks you can sell in a day.',
+    short: 'The rent, the profit on each drink, and the drinks you sell in a day decide it. All three are numbers you can find this month.',
     known: [
-      { text: 'The block has to buy enough drinks every day to cover the rent, the staff and you.', source: 0 },
-      { text: 'Divide the monthly rent by what one drink earns after ingredients, cups and wages, then by 30. The result is the drinks a day that pay the rent.', source: 0 },
+      { text: 'The block has to buy enough drinks every day to cover rent and wages, yours included.', source: 0 },
+      { text: 'Divide the monthly rent by what one drink earns after ingredients, cups, and wages, then by 30. The result is the drinks a day that pay the rent.', source: 0 },
     ],
     changes_if: ['There is already a tea or coffee shop within a few blocks.', 'The lease runs five years or more and you sign it personally.', 'Foot traffic drops after 6 p.m. or on weekends.'],
-    desks: [{ name: 'PCC Small Business Development Center', what: 'Free, confidential one on one advising. Their four week Business Design Series tests whether an idea holds up.', ask: 'Does this idea hold up at my rent?', cost: 'Free', bring: 'Your rent figure and a drink price', url: 'https://www.pcc.edu/business/small-business-development/' }],
+    desks: [{ name: 'PCC Small Business Development Center', what: 'Free, confidential, one-on-one advising. Their four-week Business Design Series tests whether an idea holds up.', ask: 'Does this idea hold up at my rent?', cost: 'Free', bring: 'Your rent figure and a drink price', url: 'https://www.pcc.edu/business/small-business-development/' }],
     ask_someone: 'Do you know anyone who runs a small food shop? Ask what their first year cost and which month was hardest.',
     question_back: null,
     sources: [{ title: 'Small Business Development Center', site: 'pcc.edu', url: 'https://www.pcc.edu/business/small-business-development/' }],
@@ -85,7 +85,7 @@ const pharmacy: Scripted = {
   answer: {
     short: 'Ask the pharmacist before you take it. Ibuprofen can raise blood pressure a few points and can work against some blood pressure medicines.',
     known: [
-      { text: 'In studies, regular ibuprofen raised the top blood pressure number by about 3 to 4 points. For a single dose that change is usually small. Some experts still advise people with high blood pressure to avoid this group of pain relievers, called NSAIDs, which also includes naproxen.', source: 1 },
+      { text: 'In studies, regular ibuprofen raised the top blood pressure number by about three to four points. A single dose usually changes it little. Some experts advise people with high blood pressure to avoid NSAIDs, the pain relievers that include ibuprofen and naproxen.', source: 1 },
       { text: 'A pharmacist can check your exact medicine and suggest a pain reliever that fits it.', source: 0 },
     ],
     changes_if: ['You need it for more than a few days.', 'You also have kidney or heart problems.', 'Your blood pressure is already above the goal your doctor set.'],
@@ -109,7 +109,7 @@ const fallback: Scripted = {
   match: /./,
   sort: { sort: 'route', category: 'General', place: '', code: 'GEN 0.0', path: ['General', 'Unsorted'] },
   answer: {
-    short: 'This desk has no scripted answer for that call. A reference librarian handles questions like it every day.',
+    short: 'A reference librarian can take this call.',
     known: [],
     changes_if: [],
     desks: [{ name: 'Your public library reference desk', what: 'Finds the source, the office or the rule that covers a question.', ask: 'The call, word for word', cost: 'Free', bring: 'The question, written down', url: '' }],
