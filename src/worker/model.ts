@@ -9,6 +9,50 @@ import { fail } from './util';
 
 export type ChatMessage = { role: 'system' | 'user' | 'assistant'; content: string };
 
+/** The model name the endpoint serves. MODEL_NAME when set; otherwise the
+ * first model the endpoint lists, remembered for the life of the isolate. */
+let discovered: string | null = null;
+async function modelName(env: Env): Promise<string> {
+  if (env.MODEL_NAME) return env.MODEL_NAME;
+  if (discovered) return discovered;
+  const res = await fetch(`${env.MODAL_BASE_URL}/v1/models`, { headers: { authorization: `Bearer ${env.MODAL_TOKEN}` } });
+  if (!res.ok) fail(503, res.status >= 500 ? 'The model is starting. Try again in a minute.' : 'The model did not answer.');
+  const body = (await res.json()) as { data?: { id: string }[] };
+  const id = body.data?.[0]?.id;
+  if (!id) fail(502, 'The model endpoint lists no model.');
+  discovered = id;
+  return id;
+}
+
+/** Whether the endpoint takes a JSON schema. Flipped off after one refusal. */
+let schemaOk = true;
+
+function requestBody(model: string, messages: ChatMessage[], schema: unknown, stream: boolean) {
+  const body: Record<string, unknown> = { model, messages, stream, temperature: 0.3, max_tokens: 1200 };
+  if (schemaOk) body.response_format = { type: 'json_schema', json_schema: { name: 'reply', schema } };
+  else body.response_format = { type: 'json_object' };
+  return JSON.stringify(body);
+}
+
+async function call(env: Env, messages: ChatMessage[], schema: unknown, stream: boolean): Promise<Response> {
+  const model = await modelName(env);
+  const send = () =>
+    fetch(`${env.MODAL_BASE_URL}/v1/chat/completions`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${env.MODAL_TOKEN}` },
+      body: requestBody(model, messages, schema, stream),
+    });
+  let res = await send();
+  if (res.status === 400 && schemaOk) {
+    // The endpoint refused the schema parameter: ask for a JSON object instead.
+    schemaOk = false;
+    res = await send();
+  }
+  if (res.status === 401 || res.status === 403) fail(502, 'The model refused the token.');
+  if (!res.ok || !res.body) fail(503, res.status >= 500 ? 'The model is starting. Try again in a minute.' : 'The model did not answer.');
+  return res;
+}
+
 export type StreamEvent<T> = { type: 'delta'; text: string } | { type: 'done'; value: T };
 
 /** Like completeJson, but yields the raw text as it arrives. In scripted
@@ -47,14 +91,8 @@ export async function* streamJson<T>(
 }
 
 async function* stream(env: Env, messages: ChatMessage[], schema: unknown): AsyncGenerator<string> {
-  const res = await fetch(`${env.MODAL_BASE_URL}/v1/chat/completions`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${env.MODAL_TOKEN}` },
-    body: JSON.stringify({ model: env.MODEL_NAME, messages, stream: true, temperature: 0.3, max_tokens: 1200, response_format: { type: 'json_schema', json_schema: { name: 'reply', schema } } }),
-  });
-  if (res.status === 401 || res.status === 403) fail(502, 'The model refused the token.');
-  if (!res.ok || !res.body) fail(503, res.status >= 500 ? 'The model is starting. Try again in a minute.' : 'The model did not answer.');
-  const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
+  const res = await call(env, messages, schema, true);
+  const reader = res.body!.pipeThrough(new TextDecoderStream()).getReader();
   let buffer = '';
   for (;;) {
     const { value, done } = await reader.read();
@@ -105,19 +143,7 @@ function parse<T>(raw: string, zod: ZodType<T>): T | null {
 }
 
 async function complete(env: Env, messages: ChatMessage[], schema: unknown): Promise<string> {
-  const res = await fetch(`${env.MODAL_BASE_URL}/v1/chat/completions`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${env.MODAL_TOKEN}` },
-    body: JSON.stringify({
-      model: env.MODEL_NAME,
-      messages,
-      temperature: 0.3,
-      max_tokens: 1200,
-      response_format: { type: 'json_schema', json_schema: { name: 'reply', schema } },
-    }),
-  });
-  if (res.status === 401 || res.status === 403) fail(502, 'The model refused the token.');
-  if (!res.ok) fail(503, res.status >= 500 ? 'The model is starting. Try again in a minute.' : 'The model did not answer.');
+  const res = await call(env, messages, schema, false);
   const body = (await res.json()) as { choices?: { message?: { content?: string } }[] };
   return body.choices?.[0]?.message?.content ?? '';
 }

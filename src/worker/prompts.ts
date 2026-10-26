@@ -17,7 +17,7 @@ export function sortPrompt(): string {
     '"both": a short general answer helps the person get more out of the desk. When unsure, choose both.',
     'Also give a short category (two or three words, like "Housing" or "Home repair") and the place the call is about if it names or implies one, else "".',
     'Classify the call like a library call number: "code" is three capital letters for the category and a number with one or two decimals, like HSG 4.21, and "path" steps from broad to narrow in two to four short labels, like Housing, Renting, Deposits, Deductions for wear.',
-    'Answer as JSON: {"sort", "category", "place", "code", "path"}.',
+    'Answer with only a JSON object: {"sort", "category", "place", "code", "path"}. No prose before or after it.',
   ].join('\n');
 }
 
@@ -34,7 +34,7 @@ export function answerPrompt(option: Pick<Option, 'label' | 'does' | 'slips' | '
     '"changes_if": two to four conditions that would flip the answer. Empty for a simple how-to.',
     '"question_back": one question only if its answer changes the next step, with two or three short choices and the next step for each. Else null.',
     option.check ? 'Before answering, check each claim against its source and drop any the source does not support.' : '',
-    'Answer as JSON matching the schema.',
+    'Answer with only a JSON object with the keys short, known, changes_if, desks, ask_someone, question_back, sources. No prose before or after it.',
   ];
   return parts.filter(Boolean).join('\n');
 }
@@ -48,6 +48,6 @@ export function managerPrompt(): string {
     '"desksExist": does each named desk exist and handle this kind of call?',
     '"sectionsPresent": for a routed call, were the short answer, what is known, this answer changes if, who handles this, and sources all present? For a how-to, were the short answer and the steps present?',
     '"note": one sentence on what failed, or "Every check passed."',
-    'Answer as JSON matching the schema.',
+    'Answer with only a JSON object with the keys covered, sourcesAgree, desksExist, sectionsPresent, note. No prose before or after it.',
   ].join('\n');
 }
