@@ -1,5 +1,7 @@
 # The model on Modal
 
+The short way: add `MODAL_TOKEN_ID`, `MODAL_TOKEN_SECRET` and `MODAL_TOKEN` as repository secrets on GitHub and run the "Deploy model" workflow. It deploys this file, stores the endpoint, and connects the Worker. The rest of this page is the same thing by hand.
+
 One Python file, `serve.py`, runs vLLM with an open-weights instruct model and exposes the OpenAI-compatible chat API. The Cloudflare Worker is the only caller.
 
 ## Set up once
