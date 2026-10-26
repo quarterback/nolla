@@ -49,6 +49,7 @@ Ron Bronson owns this policy. His latest explicit instructions take precedence o
 
 ## Publishing checks
 
+- For generated response work, follow [the conversation review procedure](docs/conversation-design.md) and record findings against its cases. Proposed example wording remains subject to Ron's approval. Keep mechanical findings, semantic judgments, and owner decisions separate.
 - `npm run check:docs`, which runs prosekeep on the docs and `scripts/check-copy.mjs` on every interface string.
 - `npx prosekeep review` on the extracted strings, worked through by hand, before any pull request that changes copy.
 - `npx prosekeep@0.3.0 compare` on any revision of Ron's writing.

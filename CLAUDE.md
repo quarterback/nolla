@@ -10,6 +10,10 @@ nolla is a reference desk with a price list, built as a story prop and a test be
 
 The desk's rules are the `0000th` skill and `EDITORIAL.md`, both the owner's. The look follows `docs/GUIDELINES.md` and the chartreuse flow row (ask, generate, pay) on the owner's "0000th interface" design canvas.
 
+## Content work
+
+Read `docs/conversation-design.md` and `docs/conversation-examples.md` before changing response prompts, scripted answers, or answer presentation. The baseline contains proposed examples with pending owner approval. Preserve their status until Ron records a decision. Keep the visual requirements in `docs/GUIDELINES.md`; review answer content independently with Prosekeep and the baseline cases. The guide and agent skills are not loaded automatically by the runtime model.
+
 ## Records and checks
 
 At the end of each meaningful agent run, write a ClosedTab Agent Action Record in `docs/aar-<slug>.md` using `.claude/skills/closedtab/SKILL.md`. Before opening a pull request, run `npm run check` and `npm run check:docs`. `check:docs` runs prosekeep with the settings in `.editorial.json` and `closedtab check` on every record. Follow `.claude/skills/prosekeep/SKILL.md` when editing docs.
