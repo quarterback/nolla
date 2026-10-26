@@ -10,7 +10,7 @@ routes = [
   { pattern = "0000th.ai", custom_domain = true },
   # The old placeholder domain. The Worker sends it to 0000th.ai.
   { pattern = "nollanolla.com", custom_domain = true },
-  # www.nollanolla.com joins once its old DNS record is deleted.
+  { pattern = "www.nollanolla.com", custom_domain = true },
 ]
 
 [assets]
