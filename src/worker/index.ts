@@ -1,9 +1,10 @@
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
+import { streamSSE } from 'hono/streaming';
 import type { AppBindings, Env } from './env';
 import { modelConfigured, scripted } from './env';
 import { requireAccess } from './access';
-import { completeJson } from './model';
+import { completeJson, streamJson } from './model';
 import { answerPrompt, managerPrompt, sortPrompt } from './prompts';
 import { scriptedAnswer, scriptedManager, scriptedSort } from './script';
 import { fail } from './util';
@@ -75,18 +76,29 @@ api.post('/answer', async (c) => {
   const { text, sort, parts, earlierTurns } = body.data;
   if (sort.sort === 'desk' && parts.slips) fail(400, 'A call answered at the desk has no slip.');
   const option = { ...describe(parts), ...parts };
-  const answer = await completeJson(
-    c.env,
-    [{ role: 'system', content: answerPrompt(option, sort.sort, sort.category, sort.place) }, { role: 'user', content: text }],
-    ANSWER_JSON_SCHEMA,
-    Answer,
-    () => scriptedAnswer(text, parts),
-  );
-  const words = countWords(answer);
-  const slips = answer.desks.length ? 1 : 0;
-  const sources = Math.min(answer.sources.length, parts.sources);
-  const charged = price({ slips, sources, words, check: parts.check }, earlierTurns);
-  return c.json({ answer, words, charged });
+  const messages = [{ role: 'system' as const, content: answerPrompt(option, sort.sort, sort.category, sort.place) }, { role: 'user' as const, content: text }];
+  const finish = (answer: Answer) => {
+    const words = countWords(answer);
+    const slips = answer.desks.length ? 1 : 0;
+    const sources = Math.min(answer.sources.length, parts.sources);
+    return { answer, words, charged: price({ slips, sources, words, check: parts.check }, earlierTurns) };
+  };
+  // The page asks for a stream so it can show the answer being written and
+  // the meter running. Anything else gets the finished JSON.
+  if (c.req.header('accept')?.includes('text/event-stream')) {
+    return streamSSE(c, async (s) => {
+      try {
+        for await (const ev of streamJson(c.env, messages, ANSWER_JSON_SCHEMA, Answer, () => scriptedAnswer(text, parts))) {
+          if (ev.type === 'delta') await s.writeSSE({ event: 'delta', data: JSON.stringify(ev.text) });
+          else await s.writeSSE({ event: 'done', data: JSON.stringify(finish(ev.value)) });
+        }
+      } catch (err) {
+        await s.writeSSE({ event: 'error', data: JSON.stringify(err instanceof HTTPException ? err.message : 'The desk did not answer.') });
+      }
+    });
+  }
+  const answer = await completeJson(c.env, messages, ANSWER_JSON_SCHEMA, Answer, () => scriptedAnswer(text, parts));
+  return c.json(finish(answer));
 });
 
 /** The manager desk: a separate call with a separate prompt. It checks; the

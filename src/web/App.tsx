@@ -1,23 +1,41 @@
 import { useEffect, useState } from 'react';
-import { RATE_USD_PER_1000, SCHEDULE, counterRefund, managerDecision, type Claim, type CostToYou, type CounterReason, type Price, type Want } from '../shared/desk';
+import { RATE_USD_PER_1000, SCHEDULE, counterRefund, managerDecision, price, type Claim, type CostToYou, type CounterReason, type Want } from '../shared/desk';
 import type { Parts } from '../shared/desk-schemas';
 import { api } from './api';
 import { fmt, load, save, type Call, type Store } from './store';
+import { sentencesSoFar, wordCount } from './stream';
 import { CallForm } from './CallForm';
+import { Generating } from './Generating';
 import { AnswerPage } from './AnswerPage';
 import { Counter, Manager } from './Refunds';
 import { Register } from './Register';
+import { Front } from './Front';
+import { TOUR, TOUR_BALANCE, tourGenerating, tourState, type TourState } from './tour';
 
-type View = { name: 'call' } | { name: 'answer'; id: string } | { name: 'counter'; id: string } | { name: 'manager'; id: string } | { name: 'register' };
+type View =
+  | { name: 'front' }
+  | { name: 'call' }
+  | { name: 'generating'; id: string }
+  | { name: 'answer'; id: string }
+  | { name: 'counter'; id: string }
+  | { name: 'manager'; id: string }
+  | { name: 'register' }
+  | { name: 'tour'; state: TourState };
 
 export function App() {
   const [store, setStore] = useState<Store>(() => load());
-  const [view, setView] = useState<View>({ name: 'call' });
+  const [view, setView] = useState<View>({ name: 'front' });
+  const [tour, setTour] = useState<Call | null>(null);
   const [model, setModel] = useState<string>('checking');
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
+  const [live, setLive] = useState<{ label: string; fixed: number; sentences: string[]; words: number }>({ label: '', fixed: 0, sentences: [], words: 0 });
 
   useEffect(() => save(store), [store]);
+  useEffect(() => {
+    if (store.theme) document.documentElement.setAttribute('data-theme', store.theme);
+    else document.documentElement.removeAttribute('data-theme');
+  }, [store.theme]);
   useEffect(() => {
     let stop = false;
     const poll = () => api.health().then((h) => !stop && setModel(h.model)).catch(() => !stop && setModel('unknown'));
@@ -33,35 +51,29 @@ export function App() {
     setStore((s) => ({ ...s, ...more, calls: s.calls.map((c) => (c.id === id ? { ...c, ...patch } : c)) }));
   const current = (id: string) => store.calls.find((c) => c.id === id);
 
-  /** Step 1: sort. Always charged. */
-  const sort = async (text: string): Promise<Call | null> => {
+  /** Ask: sort the call, then run the chosen option as a stream. */
+  const ask = async (text: string, parts: Parts, label: string) => {
     setBusy(true);
     setProblem(null);
+    let call: Call | null = null;
     try {
       const { sort } = await api.sort(text, 0);
-      const call: Call = { id: crypto.randomUUID(), n: store.calls.length + 1, text, at: new Date().toISOString(), sort, refunds: [], flagged: false, redo: false };
-      setStore((s) => ({ ...s, balance: s.balance - SCHEDULE.sort, calls: [...s.calls, call] }));
-      return call;
-    } catch (e) {
-      setProblem((e as Error).message);
-      return null;
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  /** Step 2: run the form the person set. The bill uses real words, capped
-   * at the posted price. */
-  const run = async (call: Call, parts: Parts, quote: Price) => {
-    setBusy(true);
-    setProblem(null);
-    try {
-      const { answer, words, charged } = await api.answer(call.text, call.sort, parts, 0);
+      const quote = price(parts, 0);
+      call = { id: crypto.randomUUID(), n: store.calls.length + 1, text, at: new Date().toISOString(), sort, parts, quote, refunds: [], flagged: false, redo: false };
+      const fixed = quote.total - parts.words * SCHEDULE.word;
+      setStore((s) => ({ ...s, balance: s.balance - SCHEDULE.sort, calls: [...s.calls, call!] }));
+      setLive({ label, fixed, sentences: [], words: 0 });
+      setView({ name: 'generating', id: call.id });
+      const { answer, words, charged } = await api.answerStream(text, sort, parts, 0, (raw) => {
+        const sentences = sentencesSoFar(raw);
+        setLive({ label, fixed, sentences, words: wordCount(sentences.join(' ')) });
+      });
       const capped = charged.total > quote.total ? quote : charged;
-      update(call.id, { parts, quote, charged: capped, answer, words }, { balance: store.balance - (capped.total - SCHEDULE.sort) });
+      update(call.id, { charged: capped, answer, words }, { balance: store.balance - capped.total });
       setView({ name: 'answer', id: call.id });
     } catch (e) {
       setProblem((e as Error).message);
+      setView({ name: 'call' });
     } finally {
       setBusy(false);
     }
@@ -112,34 +124,71 @@ export function App() {
   };
 
   const resetAll = () => {
+    const theme = store.theme;
     localStorage.removeItem('nolla:desk');
-    setStore(load());
+    setStore({ ...load(), theme });
     setView({ name: 'call' });
   };
 
   const c = 'id' in view ? current(view.id) : undefined;
+  const openTour = (state: TourState) => {
+    setTour(tourState(state));
+    setView({ name: 'tour', state });
+  };
+  const tourTitle = view.name === 'tour' ? TOUR.find((t) => t.key === view.state)?.name : '';
 
   return (
     <div className="page">
       <header className="top">
-        <button className="name" onClick={() => setView({ name: 'call' })}>
+        <button className="name" onClick={() => setView({ name: 'front' })}>
           nolla
         </button>
         <button className="balance" onClick={() => setView({ name: 'register' })}>
-          {fmt(store.balance)} tkn · 1,000 = ${RATE_USD_PER_1000.toFixed(2)}
+          {view.name === 'tour' ? `${fmt(TOUR_BALANCE)} tkn` : `${fmt(store.balance)} tkn · 1,000 = $${RATE_USD_PER_1000.toFixed(2)}`}
         </button>
       </header>
       {problem && <div className="problem">{problem}</div>}
       <main>
-        {view.name === 'call' && <CallForm busy={busy} model={model} onSort={sort} onRun={run} />}
+        {view.name === 'front' && <Front onStart={() => setView({ name: 'call' })} onTour={openTour} />}
+        {view.name === 'tour' && tour && (
+          <>
+            <div className="tourbar">
+              <span>tour · {tourTitle}</span>
+              <button onClick={() => setView({ name: 'front' })}>Back to the tour</button>
+            </div>
+            <TourScreen state={view.state} call={tour} setCall={setTour} />
+          </>
+        )}
+        {view.name === 'call' && <CallForm busy={busy} model={model} onAsk={ask} />}
+        {view.name === 'generating' && c && <Generating call={c} label={live.label} fixed={live.fixed} sentences={live.sentences} words={live.words} balance={store.balance} />}
         {view.name === 'answer' && c && (
-          <AnswerPage call={c} busy={busy} onPick={(pick) => update(c.id, { pick })} onRefund={() => setView({ name: 'counter', id: c.id })} onRedo={() => redo(c)} onNew={() => setView({ name: 'call' })} />
+          <AnswerPage call={c} balance={store.balance} busy={busy} onPick={(pick) => update(c.id, { pick })} onRefund={() => setView({ name: 'counter', id: c.id })} onRedo={() => redo(c)} onNew={() => setView({ name: 'call' })} />
         )}
         {view.name === 'counter' && c && <Counter call={c} store={store} onPick={(r) => counter(c, r)} onManager={() => setView({ name: 'manager', id: c.id })} onBack={() => setView({ name: 'answer', id: c.id })} />}
         {view.name === 'manager' && c && <Manager call={c} busy={busy} onDecide={(cl, co, w) => manager(c, cl, co, w)} onRedo={() => redo(c)} onBack={() => setView({ name: 'answer', id: c.id })} />}
-        {view.name === 'register' && <Register store={store} model={model} onOpen={(id) => setView({ name: 'answer', id })} onReset={resetAll} />}
+        {view.name === 'register' && (
+          <Register store={store} model={model} onOpen={(id) => setView({ name: 'answer', id })} onReset={resetAll} onTheme={(theme) => setStore((s) => ({ ...s, theme }))} />
+        )}
       </main>
-      <footer className="colophon">Tokens are a game currency. Every charge is simulated.</footer>
     </div>
   );
+}
+
+/** One state of the tour, with the balance held at the tour's figure. */
+function TourScreen({ state, call, setCall }: { state: TourState; call: Call; setCall: (c: Call) => void }) {
+  const noop = () => undefined;
+  const balance = TOUR_BALANCE - (call.charged?.total ?? 0) + call.refunds.reduce((n, r) => n + r.amount, 0);
+  if (state === 'ask') return <CallForm busy={false} model="scripted" onAsk={noop} preset={call.text} />;
+  if (state === 'generating') {
+    const g = tourGenerating();
+    return <Generating call={call} label={g.label} fixed={g.fixed} sentences={g.sentences} words={g.words} balance={TOUR_BALANCE} />;
+  }
+  if (state === 'counter') {
+    const store = { week: '', balance, counterWeek: 60, calls: [call] };
+    return <Counter call={call} store={store} onPick={(reason) => counterRefund(reason, call.charged!, 0, 0)} onManager={noop} onBack={noop} />;
+  }
+  if (state === 'manager' || state === 'approved' || state === 'partly' || state === 'denied') {
+    return <Manager call={call} busy={false} onDecide={noop} onRedo={noop} onBack={noop} />;
+  }
+  return <AnswerPage call={call} balance={balance} busy={false} onPick={(pick) => setCall({ ...call, pick })} onRefund={noop} onRedo={noop} onNew={noop} />;
 }

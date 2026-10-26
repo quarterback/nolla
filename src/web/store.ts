@@ -43,7 +43,11 @@ export interface Call {
   pick?: string;
 }
 
+export type Theme = 'light' | 'dark';
+
 export interface Store {
+  /** The look the person chose. Unset follows the system's light or dark. */
+  theme?: Theme;
   week: string;
   balance: number;
   counterWeek: number;
@@ -75,3 +79,5 @@ export function save(s: Store) {
 
 export const callNumber = (n: number) => String(n).padStart(4, '0');
 export const fmt = (n: number, d = 0) => n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+/** Every token figure carries its unit. */
+export const tkn = (n: number) => `${fmt(n)} tkn`;

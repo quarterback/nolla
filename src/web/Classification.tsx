@@ -1,31 +1,24 @@
 import { callNumber, type Call } from './store';
 
-/** The desk's classification, large and set apart: the code with its out of
- * register copy behind it, and the path stepping down beneath. */
+/** The sort path, as the model filed the call. */
 export function Classification({ call }: { call: Call }) {
   const s = call.sort;
   return (
-    <div className="classification">
-      <p className="code" data-copy={s.code}>
-        {s.code}
-      </p>
-      <ol className="path">
-        {s.path.map((p, i) => (
-          <li key={p} className={i === s.path.length - 1 ? 'last' : ''} style={{ paddingLeft: `${i * 20}px` }}>
-            {p}
-          </li>
-        ))}
-      </ol>
-    </div>
+    <ol className="path">
+      {s.path.map((p, i) => (
+        <li key={p} className={i === s.path.length - 1 ? 'last' : ''} style={{ paddingLeft: `${i * 16}px` }}>
+          {p}
+        </li>
+      ))}
+    </ol>
   );
 }
 
-/** The one line form of the same thing, for pages after the quote. */
+/** The one line form, for pages after the question. */
 export function MachineLine({ call, extra }: { call: Call; extra?: string }) {
-  const s = call.sort;
   return (
     <p className="machine">
-      call {callNumber(call.n)} · {s.code} · {s.path.slice(0, 3).join(', ')}
+      call {callNumber(call.n)} · {call.sort.path.join(', ')}
       {extra ? ` · ${extra}` : ''}
     </p>
   );

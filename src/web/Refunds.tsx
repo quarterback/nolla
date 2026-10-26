@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { CHECK_LABELS, COUNTER_MAX, COUNTER_REASONS, COUNTER_WEEK_MAX, MANAGER_QUESTIONS, type Claim, type CostToYou, type CounterReason, type CounterResult, type Want } from '../shared/desk';
-import { callNumber, fmt, type Call, type Store } from './store';
+import { callNumber, fmt, tkn, type Call, type Store } from './store';
 
 export function Counter({ call, store, onPick, onManager, onBack }: { call: Call; store: Store; onPick: (r: CounterReason) => CounterResult | null; onManager: () => void; onBack: () => void }) {
   const [picked, setPicked] = useState<CounterReason | null>(null);
@@ -23,14 +23,14 @@ export function Counter({ call, store, onPick, onManager, onBack }: { call: Call
           <li key={r.key}>
             <button
               className={`option ${picked === r.key ? 'on' : ''}`}
+              aria-pressed={picked === r.key}
               disabled={!!result}
               onClick={() => {
                 setPicked(r.key);
                 setResult(onPick(r.key));
               }}
             >
-              <span className="marker" aria-hidden="true" />
-              <span className="o-label">{r.label}</span>
+                <span className="o-label">{r.label}</span>
             </button>
           </li>
         ))}
@@ -39,20 +39,15 @@ export function Counter({ call, store, onPick, onManager, onBack }: { call: Call
       {result && !result.toManager && (
         <>
           <section className="grid">
-            {result.amount > 0 && (
-              <div className="grid-stamp">
-                <span className="stamp">Refunded</span>
-              </div>
-            )}
             {bill.lines.map((l) => (
               <div key={l.label} className={`row ${struck.has(l.label) ? 'struck' : ''}`}>
                 <span>{cap(l.label.replace(/^about /, ''))}</span>
-                <span className="num">{fmt(l.tkn)}</span>
+                <span className="num">{tkn(l.tkn)}</span>
               </div>
             ))}
             <div className="row total">
               <span>Refunded</span>
-              <span className="num">{fmt(result.amount)}</span>
+              <span className="num">{tkn(result.amount)}</span>
             </div>
           </section>
           <p className="lede-s">
@@ -156,7 +151,7 @@ export function Manager({ call, busy, onDecide, onRedo, onBack }: { call: Call; 
           ))}
         </div>
         <div className="sheet receipt">
-          <p className="receipt-title">Decision receipt {r.n}</p>
+          <p className="receipt-title">Decision receipt {r.n} · {title}</p>
           <dl className="slip-lines">
             <dt>Found</dt>
             <dd>{cap(d.found)}</dd>
@@ -170,7 +165,6 @@ export function Manager({ call, busy, onDecide, onRedo, onBack }: { call: Call; 
             <dt>Appeal</dt>
             <dd>A person reviews appeals within 7 days</dd>
           </dl>
-          <span className="stamp sheet-stamp">{title}</span>
         </div>
         <p className="lede-s">{why}</p>
         <div className="stack">
@@ -211,8 +205,7 @@ export function Manager({ call, busy, onDecide, onRedo, onBack }: { call: Call; 
         {q.choices.map(([key, text]) => (
           <li key={key}>
             <button className="option" disabled={busy} onClick={() => choose(key)}>
-              <span className="marker" aria-hidden="true" />
-              <span className="o-label">{text}</span>
+                <span className="o-label">{text}</span>
             </button>
           </li>
         ))}
