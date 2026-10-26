@@ -57,7 +57,7 @@ h1, h2, p, dl, dd { margin: 0; }
 .name { font-family: var(--display); font-weight: 900; font-size: 16px; }
 .balance { font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; }
 main { flex: 1; padding: 24px 0 40px; }
-.problem { margin-top: 16px; padding: 10px 0; border-top: 3px solid var(--ink); border-bottom: 3px solid var(--ink); font-weight: 700; font-size: 16px; }
+.problem { margin-top: 12px; font-weight: 700; font-size: 16px; }
 
 .headline { font-family: var(--display); font-weight: 900; font-size: 27px; line-height: 1.12; }
 .headline.small { font-size: 21px; }
@@ -99,7 +99,7 @@ textarea::placeholder { color: var(--dim); }
 .optionlist { list-style: none; margin: 18px 0 0; padding: 0; }
 .optionlist li { border-top: 1px solid var(--ink); }
 .optionlist li:last-child { border-bottom: 1px solid var(--ink); }
-.option { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; width: 100%; min-height: 48px; text-align: left; padding: 11px 0; align-items: baseline; }
+.option { display: flex; justify-content: space-between; gap: 12px; width: 100%; min-height: 44px; text-align: left; padding: 10px 0; align-items: baseline; }
 .o-label { font-weight: 500; font-size: 17px; }
 .option.on .o-label { font-weight: 700; }
 .o-price { font-family: var(--mono); font-size: 16px; text-align: right; }

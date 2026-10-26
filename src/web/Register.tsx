@@ -1,4 +1,4 @@
-import { ALLOWANCE, COUNTER_WEEK_MAX, usd } from '../shared/desk';
+import { ALLOWANCE, COUNTER_WEEK_MAX } from '../shared/desk';
 import { callNumber, fmt, tkn, type Store, type Theme } from './store';
 
 const THEMES: { key: Theme; label: string }[] = [
@@ -14,7 +14,7 @@ export function Register({ store, model, onOpen, onReset, onTheme }: { store: St
       <h1 className="headline">Register</h1>
       <p className="machine">week of {store.week.slice(0, 10)} · model {model}</p>
       <p className="giant">{tkn(store.balance)}</p>
-      <p className="giant-sub">of {tkn(ALLOWANCE)} this week · ${fmt(usd(store.balance), 3)} at the house rate</p>
+      <p className="giant-sub">of {tkn(ALLOWANCE)} this week</p>
       <div className="grid">
         <div className="row">
           <span>Spent this week</span>
