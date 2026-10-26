@@ -35,8 +35,6 @@ export interface Call {
   charged?: Price;
   answer?: Answer;
   words?: number;
-  /** The answer text came from the design canvas and awaits approval. */
-  placeholder?: boolean;
   refunds: Refund[];
   receipt?: Receipt;
   flagged: boolean;

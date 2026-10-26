@@ -1,21 +1,16 @@
 // Scripted answers for dev, when no model is set up. Four calls from the
 // design canvas, matched by keyword, and a routed fallback for anything else.
-//
-// PLACEHOLDER: every answer here came from the design canvas, where an
-// assistant wrote it as placeholder text. It stays placeholder until the owner
-// approves it (EDITORIAL.md). The Worker marks it so the page can say so.
+
 
 import type { Answer, ManagerChecks, SortResult } from '../shared/desk-schemas';
 
 interface Scripted {
-  placeholder: true;
   match: RegExp;
   sort: SortResult;
   answer: Answer;
 }
 
 const deposit: Scripted = {
-  placeholder: true,
   match: /deposit|landlord|carpet/i,
   sort: { sort: 'both', category: 'Housing', place: 'Oregon', code: 'HSG 4.21', path: ['Housing', 'Renting', 'Deposits', 'Deductions for wear'] },
   answer: {
@@ -47,7 +42,6 @@ const deposit: Scripted = {
 };
 
 const toilet: Scripted = {
-  placeholder: true,
   match: /toilet|flush/i,
   sort: { sort: 'desk', category: 'Home repair', place: '', code: 'HOM 2.3', path: ['Home repair', 'Plumbing', 'Toilets'] },
   answer: {
@@ -69,7 +63,6 @@ const toilet: Scripted = {
 };
 
 const business: Scripted = {
-  placeholder: true,
   match: /shop|business|open a|cafe|tea/i,
   sort: { sort: 'both', category: 'Small business', place: 'Portland', code: 'BUS 1.1', path: ['Small business', 'Starting', 'Will it pay'] },
   answer: {
@@ -87,7 +80,6 @@ const business: Scripted = {
 };
 
 const pharmacy: Scripted = {
-  placeholder: true,
   match: /ibuprofen|medicine|blood pressure|pill|drug/i,
   sort: { sort: 'route', category: 'Medicine', place: '', code: 'MED 3.4', path: ['Medicine', 'Pain relief', 'Drug interactions'] },
   answer: {
@@ -114,7 +106,6 @@ const pharmacy: Scripted = {
 };
 
 const fallback: Scripted = {
-  placeholder: true,
   match: /./,
   sort: { sort: 'route', category: 'General', place: '', code: 'GEN 0.0', path: ['General', 'Unsorted'] },
   answer: {

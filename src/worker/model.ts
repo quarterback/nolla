@@ -4,7 +4,7 @@
 
 import type { ZodType } from 'zod';
 import type { Env } from './env';
-import { isDev, modelConfigured } from './env';
+import { modelConfigured, scripted as useScript } from './env';
 import { fail } from './util';
 
 export type ChatMessage = { role: 'system' | 'user' | 'assistant'; content: string };
@@ -16,10 +16,8 @@ export async function completeJson<T>(
   zod: ZodType<T>,
   scripted: () => T,
 ): Promise<T> {
-  if (!modelConfigured(env)) {
-    if (!isDev(env)) fail(503, 'The model is not set up.');
-    return scripted();
-  }
+  if (useScript(env)) return scripted();
+  if (!modelConfigured(env)) fail(503, 'The model is not set up.');
   const first = await complete(env, messages, jsonSchema);
   const parsed = parse(first, zod);
   if (parsed) return parsed;

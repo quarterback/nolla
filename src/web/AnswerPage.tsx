@@ -56,7 +56,6 @@ export function AnswerPage({ call, busy, onPick, onRefund, onRedo, onNew }: Prop
           {fmt(bill.total)} tkn · ${fmt(usd(bill.total), 4)}
           {a.known.length ? ` · ${call.words} words written${capped ? ', billed at the posted price' : ''}` : ''} · energy {fmt(fp.wh, 2)} Wh · water {fmt(fp.ml, 1)} mL · carbon {fmt(fp.g, 3)} g
         </p>
-        {call.placeholder && <p className="machine">placeholder text from the design canvas, awaiting approval</p>}
         {call.flagged && <p className="machine">flagged for review{call.receipt ? ` · decision receipt ${call.receipt.n}` : ''}</p>}
       </section>
 

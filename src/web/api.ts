@@ -17,6 +17,6 @@ export const api = {
   },
   sort: (text: string, earlierTurns: number) => post<{ sort: SortResult; quotes: Quote[] }>('/sort', { text, earlierTurns }),
   answer: (text: string, sort: SortResult, parts: Parts, earlierTurns: number) =>
-    post<{ answer: Answer; words: number; charged: Price; placeholder: boolean }>('/answer', { text, sort, parts, earlierTurns }),
+    post<{ answer: Answer; words: number; charged: Price }>('/answer', { text, sort, parts, earlierTurns }),
   manager: (text: string, answer: Answer, parts: Parts, claim: string) => post<{ checks: ManagerChecks }>('/manager', { text, answer, parts, claim }),
 };

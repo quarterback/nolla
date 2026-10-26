@@ -20,7 +20,7 @@ export const ALLOWANCE = 5000;
 /** Counter refund limits. */
 export const COUNTER_MAX = 300;
 export const COUNTER_WEEK_MAX = 1000;
-/** Footprint per token, the figures the mockup uses. Simulated. */
+/** Footprint per token. */
 export const FOOTPRINT = { whPerToken: 0.0002, mlPerToken: 0.15, gPerKwh: 380 } as const;
 
 export type Sort = 'desk' | 'route' | 'both';

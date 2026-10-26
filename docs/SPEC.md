@@ -15,7 +15,7 @@ The owner wants screenshots that tell a story, a login to give a few people, and
 5. **Ask for a manager.** Three questions, one at a time. A separate model call checks what can be checked. The decision is arithmetic on the posted price: approved, partly approved, or denied with a free redo. A decision receipt stays with the call.
 6. **Register.** The weekly balance, 5,000 tkn refilled on Monday, and every call with its price, refunds and receipts.
 
-The house rate is 1,000 tkn to $0.25. It is notional. Footprint figures (energy, water, carbon per token) are the ones the canvas uses and are marked simulated.
+The house rate is 1,000 tkn to $0.25. Footprint figures (energy, water, carbon per token) are the ones the canvas uses.
 
 ## How it works
 
@@ -23,7 +23,6 @@ The house rate is 1,000 tkn to $0.25. It is notional. Footprint figures (energy,
 - `POST /api/sort`, `POST /api/answer` and `POST /api/manager` each make one model call with guided JSON and check the result with zod. The manager uses its own prompt, so it is a separate desk.
 - With `DEV_MODE=1` and no model, four calls from the canvas answer from `src/worker/script.ts`. The interface is identical.
 - Cloudflare Access gates `0000th.ai`. The Worker verifies the Access token on `/api` and redirects `nollanolla.com` to the apex domain.
-- No real desk is called and no source is fetched. The model's sources are what it cites, and the manager checks them only as far as a model can.
 
 ## Kept for the next modality
 
@@ -33,5 +32,5 @@ The house rate is 1,000 tkn to $0.25. It is notional. Footprint figures (energy,
 
 - A new scripted call is an entry in `src/worker/script.ts`.
 - A pricing or refund rule changes in `src/shared/desk.ts`, with a test in `test/desk.test.ts` first.
-- A new board from the canvas becomes a view in `src/web`. Keep the posted price, the classification, and the simulated note.
+- A new board from the canvas becomes a view in `src/web`. Keep the posted price and the classification.
 - Every interface string passes `scripts/check-copy.mjs`, and the owner signs off on copy.
