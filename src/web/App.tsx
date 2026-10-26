@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { RATE_USD_PER_1000, SCHEDULE, counterRefund, managerDecision, price, type Claim, type CostToYou, type CounterReason, type Want } from '../shared/desk';
+import { SCHEDULE, counterRefund, managerDecision, price, type Claim, type CostToYou, type CounterReason, type Want } from '../shared/desk';
 import type { Parts } from '../shared/desk-schemas';
 import { api } from './api';
-import { fmt, load, save, type Call, type Store } from './store';
+import { load, save, tkn, type Call, type Store } from './store';
 import { sentencesSoFar, wordCount } from './stream';
 import { CallForm } from './CallForm';
 import { Generating } from './Generating';
@@ -144,10 +144,9 @@ export function App() {
           nolla
         </button>
         <button className="balance" onClick={() => setView({ name: 'register' })}>
-          {view.name === 'tour' ? `${fmt(TOUR_BALANCE)} tkn` : `${fmt(store.balance)} tkn · 1,000 = $${RATE_USD_PER_1000.toFixed(2)}`}
+          {view.name === 'tour' ? tkn(TOUR_BALANCE) : tkn(store.balance)}
         </button>
       </header>
-      {problem && <div className="problem">{problem}</div>}
       <main>
         {view.name === 'front' && <Front onStart={() => setView({ name: 'call' })} onTour={openTour} />}
         {view.name === 'tour' && tour && (
@@ -159,13 +158,13 @@ export function App() {
             <TourScreen state={view.state} call={tour} setCall={setTour} />
           </>
         )}
-        {view.name === 'call' && <CallForm busy={busy} model={model} onAsk={ask} />}
+        {view.name === 'call' && <CallForm busy={busy} problem={problem} onAsk={ask} />}
         {view.name === 'generating' && c && <Generating call={c} label={live.label} fixed={live.fixed} sentences={live.sentences} words={live.words} balance={store.balance} />}
         {view.name === 'answer' && c && (
           <AnswerPage call={c} balance={store.balance} busy={busy} onPick={(pick) => update(c.id, { pick })} onRefund={() => setView({ name: 'counter', id: c.id })} onRedo={() => redo(c)} onNew={() => setView({ name: 'call' })} />
         )}
         {view.name === 'counter' && c && <Counter call={c} store={store} onPick={(r) => counter(c, r)} onManager={() => setView({ name: 'manager', id: c.id })} onBack={() => setView({ name: 'answer', id: c.id })} />}
-        {view.name === 'manager' && c && <Manager call={c} busy={busy} onDecide={(cl, co, w) => manager(c, cl, co, w)} onRedo={() => redo(c)} onBack={() => setView({ name: 'answer', id: c.id })} />}
+        {view.name === 'manager' && c && <Manager call={c} busy={busy} problem={problem} onDecide={(cl, co, w) => manager(c, cl, co, w)} onRedo={() => redo(c)} onBack={() => setView({ name: 'answer', id: c.id })} />}
         {view.name === 'register' && (
           <Register store={store} model={model} onOpen={(id) => setView({ name: 'answer', id })} onReset={resetAll} onTheme={(theme) => setStore((s) => ({ ...s, theme }))} />
         )}
@@ -178,7 +177,7 @@ export function App() {
 function TourScreen({ state, call, setCall }: { state: TourState; call: Call; setCall: (c: Call) => void }) {
   const noop = () => undefined;
   const balance = TOUR_BALANCE - (call.charged?.total ?? 0) + call.refunds.reduce((n, r) => n + r.amount, 0);
-  if (state === 'ask') return <CallForm busy={false} model="scripted" onAsk={noop} preset={call.text} />;
+  if (state === 'ask') return <CallForm busy={false} problem={null} onAsk={noop} preset={call.text} />;
   if (state === 'generating') {
     const g = tourGenerating();
     return <Generating call={call} label={g.label} fixed={g.fixed} sentences={g.sentences} words={g.words} balance={TOUR_BALANCE} />;

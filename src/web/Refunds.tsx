@@ -106,7 +106,7 @@ function list(items: string[]) {
 }
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-export function Manager({ call, busy, onDecide, onRedo, onBack }: { call: Call; busy: boolean; onDecide: (claim: Claim, cost: CostToYou, want: Want) => void; onRedo: () => void; onBack: () => void }) {
+export function Manager({ call, busy, problem, onDecide, onRedo, onBack }: { call: Call; busy: boolean; problem?: string | null; onDecide: (claim: Claim, cost: CostToYou, want: Want) => void; onRedo: () => void; onBack: () => void }) {
   const [step, setStep] = useState(0);
   const [picks, setPicks] = useState<string[]>([]);
   const r = call.receipt;
@@ -210,6 +210,7 @@ export function Manager({ call, busy, onDecide, onRedo, onBack }: { call: Call; 
           </li>
         ))}
       </ul>
+      {problem && <p className="problem">{problem}</p>}
       <div className="actions">
         {step > 0 && (
           <button className="quiet" onClick={() => setStep(step - 1)}>

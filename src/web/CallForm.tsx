@@ -1,26 +1,18 @@
 import { useState } from 'react';
-import { SCHEDULE, options, price, usd, type Option } from '../shared/desk';
+import { options, price, type Option } from '../shared/desk';
 import type { Parts } from '../shared/desk-schemas';
-import { fmt, tkn } from './store';
-import { Pieces } from './Classification';
+import { tkn } from './store';
 
 interface Props {
   busy: boolean;
-  model: string;
+  problem: string | null;
   onAsk: (text: string, parts: Parts, label: string) => void;
   /** A call already typed, for the tour. */
   preset?: string;
 }
 
-const SAMPLES = [
-  'My landlord kept my whole deposit for carpet wear. Can they do that?',
-  'My toilet keeps running after it flushes. How do I fix it?',
-  'I want to open a bubble tea shop on my block. Is it a good idea?',
-  "Can I take ibuprofen for a headache? I'm on blood pressure medicine.",
-];
-
-/** Asking: the call typed, the four options priced under it, one button. */
-export function CallForm({ busy, model, onAsk, preset }: Props) {
+/** Asking: the call typed, four priced options, one button. */
+export function CallForm({ busy, problem, onAsk, preset }: Props) {
   const [text, setText] = useState(preset ?? '');
   const [pick, setPick] = useState<Option['key']>('sources');
   const opts = options('route');
@@ -39,39 +31,21 @@ export function CallForm({ busy, model, onAsk, preset }: Props) {
           The call
         </label>
         <textarea id="call" rows={3} value={text} onChange={(e) => setText(e.target.value)} placeholder="The question, as you would say it" disabled={busy} autoFocus />
-        <Pieces text={text} />
         <ul className="optionlist">
-          {opts.map((o) => {
-            const p = price(o, 0);
-            return (
-              <li key={o.key}>
-                <button type="button" className={`option ${pick === o.key ? 'on' : ''}`} disabled={busy} onClick={() => setPick(o.key)} aria-pressed={pick === o.key}>
-                  <span className="o-label">{o.label}</span>
-                  <span className="o-price num">{tkn(p.total)}</span>
-                  <span className="o-formula">{p.formula.toLowerCase().replace(/about /g, '')}</span>
-                </button>
-              </li>
-            );
-          })}
+          {opts.map((o) => (
+            <li key={o.key}>
+              <button type="button" className={`option ${pick === o.key ? 'on' : ''}`} disabled={busy} onClick={() => setPick(o.key)} aria-pressed={pick === o.key}>
+                <span className="o-label">{o.label}</span>
+                <span className="o-price num">{tkn(price(o, 0).total)}</span>
+              </button>
+            </li>
+          ))}
         </ul>
         <button type="submit" className="primary wide" disabled={busy || !ready}>
           {busy ? 'Sorting' : `Ask · ${tkn(price(chosen, 0).total)}`}
         </button>
-        <p className="machine">
-          sort {tkn(SCHEDULE.sort)} charged on ask · about ${fmt(usd(price(chosen, 0).total), 3)}
-          {model === 'starting' ? ' · model starting' : model === 'scripted' ? ' · scripted answers' : ''}
-        </p>
+        {problem && <p className="problem">{problem}</p>}
       </form>
-      <h2 className="kicker ruled">Sample calls</h2>
-      <ul className="samples">
-        {SAMPLES.map((s) => (
-          <li key={s}>
-            <button className="sample" onClick={() => setText(s)} disabled={busy}>
-              {s}
-            </button>
-          </li>
-        ))}
-      </ul>
     </section>
   );
 }

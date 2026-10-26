@@ -31,8 +31,9 @@ SCRIPTED = "1"
 # audience tag from the Access application for 0000th.ai.
 ACCESS_TEAM_DOMAIN = "autumn-tooth-671a.cloudflareaccess.com"
 ACCESS_AUD = "376283b085d1a62b190a8e0c348d801d7473f4d902ed5d51689f6fb04cf061bd"
-# The model name vLLM serves. Must match modal/serve.py.
-MODEL_NAME = "Qwen/Qwen2.5-7B-Instruct"
+# The model name the endpoint serves. Leave empty and the Worker asks the
+# endpoint for it.
+MODEL_NAME = ""
 
 # Secrets, set with `wrangler secret put`:
 #   MODAL_BASE_URL   the Modal web endpoint, for example https://you--nolla-model-serve.modal.run
