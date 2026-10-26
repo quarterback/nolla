@@ -4,6 +4,16 @@ Prescriptive rules for any agent building nolla screens. Follow these exactly. W
 
 The product is a Q&A desk. Every screen shows real machinery: the user's question, the live price, the streaming answer, the receipt. Nothing invented gets drawn. No classification codes, no stamps, no tilted slips, no telegraph props, no fake apparatus of any kind. If the model does it for real, show it. If it does not, leave it out.
 
+## 0. Fidelity
+
+The flow boards on the owner's "0000th interface" canvas (ask, generate, pay) are the spec. Build what they show. Adding elements the boards lack is the main failure mode, so these rules bind:
+
+- **No additions.** An element absent from the boards does not ship. If something seems needed, raise it in the pull request and the AAR; the owner decides. The current build added an exchange rate header (`5,000 tkn · 1,000 = $0.25`), a formula subline under every option (`sort 40 · slip 60 · 100 words 100`), a charge footnote under the ask button (`sort 40 tkn charged on ask · about $0.050`), and a sample calls section. All of these come out. The boards show the balance as `5,000 tkn` alone, each option as one row with name and price, and the ask button as `Ask · 200 tkn` with nothing beneath it.
+- **Options are compact.** The price menu is four single line rows, roughly 44px each, name left and price right, the selected row at weight 700. It never takes half the page. No sublines, no formulas, no dollar conversions anywhere on the screen.
+- **One status line at most.** `The desk did not answer.` appears only when a call failed, in the body near the action that failed. No standing banner.
+- **No dollars.** The tkn figure is the whole price. The exchange rate lives in the docs, never in the interface.
+- **Copy is the owner's.** Ship strings that match the boards; new strings go to him before they ship. EDITORIAL.md governs every string either way.
+
 ## 1. Style
 
 ### Color
