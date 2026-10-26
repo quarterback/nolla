@@ -77,7 +77,18 @@ The chartreuse flow row on the canvas (ask, generate, pay) is the reference rend
 - **Answered**: short answer at 21px weight 700, body at 17px, referral as a plain paragraph, question back as three equal buttons at 48px, receipt grid with 1px inner rules and a 3px rule on the total rows.
 - **Refunds** (`Refunds.tsx`): same grid language; a denied line is struck, a decision receipt uses the pale sheet.
 
-## 6. Verify
+## 6. Build the front page
+
+The app opens straight onto the call form, so a signed in visitor sees one screen and nothing explains the tool or lets the owner show its states. Add a front page as the landing view and a tour behind it. This exists for reports, posts and walkthroughs; the model itself is never public.
+
+- Add `{ name: 'front' }` to the `View` union in `src/web/App.tsx` and make it the initial view. `Start a call` goes to the call form.
+- The front page states what the desk is in a few short lines drawn from `docs/SPEC.md`: it sorts each call, posts the price before any work runs, routes to the people and places that handle the call, and refunds line by line. The owner writes the final copy; ship it marked for his pass.
+- Below that, a tour: one row per state, each opening that screen filled with a scripted call so every state is reachable without a model and without spending the balance. The states: ask with the price menu open, generating mid stream, answered with receipt, question back, refund counter, manager desk, and the three decisions (approved, partly, denied).
+- Build the tour on the scripted path that already exists (`scripted` in `src/worker/env.ts`, `scriptedSort`, `scriptedAnswer`, `scriptedManager` in `src/worker/script.ts`). Seed one fixed call (the deposit question) and derive each state from it in the store without network calls. Tour calls never touch the real balance.
+- Style it like everything else: question scale Unbounded, tour rows as ruled lines with the state name left and a one line description right, no cards, no thumbnails.
+- Gate nothing extra; Cloudflare Access already decides who gets in.
+
+## 7. Verify
 
 - Run the contrast script from GUIDELINES.md on every pairing the diff introduces and record each ratio in the pull request description.
 - Keyboard through every screen; `:focus-visible` outlines must be 3px and visible on both ground and ink surfaces.
