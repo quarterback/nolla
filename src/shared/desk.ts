@@ -41,7 +41,7 @@ export function options(sort: Sort): Option[] {
   const slips = sort === 'desk' ? 0 : 1;
   const all: Option[] = [
     { key: 'route', label: 'Route only', does: 'sort and a slip', slips: 1, sources: 0, words: 0, check: false },
-    { key: 'quick', label: 'Quick answer', does: 'sort and a short answer, no sources opened', slips, sources: 0, words: 100, check: false },
+    { key: 'quick', label: 'Quick answer', does: 'sort and a short answer', slips, sources: 0, words: 100, check: false },
     { key: 'sources', label: 'Answer with sources', does: 'sort, sources, answer', slips, sources: 2, words: 180, check: false },
     { key: 'lookinto', label: 'Look into it', does: 'sort, more sources, answer, check', slips, sources: 3, words: 300, check: true },
   ];
@@ -114,19 +114,19 @@ export function counterRefund(reason: CounterReason, charged: Price, overcharge:
   };
   switch (reason) {
     case 'source':
-      return decide([...find(/^check$/), ...find(/words/)], 'The check and the answer are refunded. Sorting and sources stay charged because that work was done.');
+      return decide([...find(/^check$/), ...find(/words/)], 'Refunded: the check and the answer words. Charged: sorting and sources.');
     case 'desk':
-      return decide(find(/slip/), 'The slip is refunded and the next routing on this call is free.');
+      return decide(find(/slip/), 'Refunded: the slip. The next routing on this call is free.');
     case 'price':
-      return { amount: overcharge, lines: overcharge ? [{ label: 'over the posted price', tkn: overcharge }] : [], toManager: false, why: overcharge ? 'The difference is refunded, with no questions.' : 'The charge matched the posted price.' };
+      return { amount: overcharge, lines: overcharge ? [{ label: 'over the posted price', tkn: overcharge }] : [], toManager: false, why: overcharge ? 'Refunded: the difference.' : 'The charge matched the posted price.' };
     case 'asked': {
       const all = charged.lines;
       const amount = sum(all);
-      if (amount <= COUNTER_MAX && weekSoFar + amount <= COUNTER_WEEK_MAX) return { amount, lines: all, toManager: false, why: 'The whole charge is refunded.' };
+      if (amount <= COUNTER_MAX && weekSoFar + amount <= COUNTER_WEEK_MAX) return { amount, lines: all, toManager: false, why: 'Refunded: the whole charge.' };
       return { amount: 0, lines: all, toManager: true, why: `A full refund is ${amount} tkn, over the counter limit. A manager can review it.` };
     }
     default:
-      return { amount: 0, lines: [], toManager: true, why: 'The counter refunds only specific, checkable problems. A manager can look at anything else, or give a free redo.' };
+      return { amount: 0, lines: [], toManager: true, why: 'The counter refunds a checkable problem. A manager reviews anything else and can give a free redo.' };
   }
 }
 
@@ -138,7 +138,7 @@ export type Want = 'tokens' | 'redo' | 'both';
 
 export const MANAGER_QUESTIONS = [
   { key: 'claim', q: 'What went wrong?', choices: [['facts', 'The facts were wrong'], ['desk', 'It sent me to the wrong desk'], ['asked', 'It did not answer what I asked'], ['price', 'I was overcharged'], ['other', 'Something else']] },
-  { key: 'cost', q: 'What did it cost you?', choices: [['time', 'Time'], ['trip', 'A wasted trip'], ['money', 'Money'], ['tokens', 'Only the tokens']] },
+  { key: 'cost', q: 'What did it cost you?', choices: [['time', 'Time'], ['trip', 'A wasted trip'], ['money', 'Money'], ['tokens', 'The tokens']] },
   { key: 'want', q: 'What would make it right?', choices: [['tokens', 'Tokens back'], ['redo', 'A free redo'], ['both', 'Both']] },
 ] as const;
 

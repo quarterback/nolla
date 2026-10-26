@@ -10,8 +10,9 @@
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.web.json",
     "test": "vitest run",
     "check": "npm run typecheck && npm run build && npm test",
-    "check:docs": "node scripts/check-docs.mjs",
-    "deploy": "npm run build && wrangler deploy"
+    "check:docs": "node scripts/check-docs.mjs && node scripts/check-copy.mjs",
+    "deploy": "npm run build && wrangler deploy",
+    "check:copy": "node scripts/check-copy.mjs"
   },
   "dependencies": {
     "hono": "^4.13.13",
@@ -33,5 +34,7 @@
     "vitest": "^4.1.12",
     "wrangler": "^4.124.0"
   },
-  "engines": { "node": ">=22" }
+  "engines": {
+    "node": ">=22"
+  }
 }

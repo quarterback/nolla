@@ -1,5 +1,5 @@
 import type { Option, Price } from '../shared/desk';
-import type { Answer, ManagerChecks, SortResult } from '../shared/desk-schemas';
+import type { Answer, ManagerChecks, Parts, SortResult } from '../shared/desk-schemas';
 
 async function post<T>(path: string, body: unknown): Promise<T> {
   const res = await fetch(`/api${path}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
@@ -16,7 +16,7 @@ export const api = {
     return (await res.json()) as { model: 'scripted' | 'off' | 'ready' | 'starting' };
   },
   sort: (text: string, earlierTurns: number) => post<{ sort: SortResult; quotes: Quote[] }>('/sort', { text, earlierTurns }),
-  answer: (text: string, sort: SortResult, option: string, earlierTurns: number) =>
-    post<{ answer: Answer; words: number; charged: Price }>('/answer', { text, sort, option, earlierTurns }),
-  manager: (text: string, answer: Answer, option: string, claim: string) => post<{ checks: ManagerChecks }>('/manager', { text, answer, option, claim }),
+  answer: (text: string, sort: SortResult, parts: Parts, earlierTurns: number) =>
+    post<{ answer: Answer; words: number; charged: Price; placeholder: boolean }>('/answer', { text, sort, parts, earlierTurns }),
+  manager: (text: string, answer: Answer, parts: Parts, claim: string) => post<{ checks: ManagerChecks }>('/manager', { text, answer, parts, claim }),
 };

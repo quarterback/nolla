@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { SCHEDULE, counterRefund, managerDecision, options, price, type CounterReason, type Want } from '../shared/desk';
-import { api, type Quote } from './api';
-import { callNumber, fmt, load, save, type Call, type Store } from './store';
+import { RATE_USD_PER_1000, SCHEDULE, counterRefund, managerDecision, type Claim, type CostToYou, type CounterReason, type Price, type Want } from '../shared/desk';
+import type { Parts } from '../shared/desk-schemas';
+import { api } from './api';
+import { fmt, load, save, type Call, type Store } from './store';
 import { CallForm } from './CallForm';
 import { AnswerPage } from './AnswerPage';
 import { Counter, Manager } from './Refunds';
@@ -33,16 +34,14 @@ export function App() {
   const current = (id: string) => store.calls.find((c) => c.id === id);
 
   /** Step 1: sort. Always charged. */
-  const sort = async (text: string): Promise<{ call: Call; quotes: Quote[] } | null> => {
+  const sort = async (text: string): Promise<Call | null> => {
     setBusy(true);
     setProblem(null);
     try {
-      const earlier = store.calls.filter((c) => c.answer).length;
-      const { sort, quotes } = await api.sort(text, 0);
+      const { sort } = await api.sort(text, 0);
       const call: Call = { id: crypto.randomUUID(), n: store.calls.length + 1, text, at: new Date().toISOString(), sort, refunds: [], flagged: false, redo: false };
       setStore((s) => ({ ...s, balance: s.balance - SCHEDULE.sort, calls: [...s.calls, call] }));
-      void earlier;
-      return { call, quotes };
+      return call;
     } catch (e) {
       setProblem((e as Error).message);
       return null;
@@ -51,15 +50,15 @@ export function App() {
     }
   };
 
-  /** Step 2: run the option. The bill replaces the estimate with real words,
-   * capped at the quote, which is the posted price. */
-  const run = async (call: Call, quote: Quote) => {
+  /** Step 2: run the form the person set. The bill uses real words, capped
+   * at the posted price. */
+  const run = async (call: Call, parts: Parts, quote: Price) => {
     setBusy(true);
     setProblem(null);
     try {
-      const { answer, words, charged } = await api.answer(call.text, call.sort, quote.key, 0);
-      const capped = charged.total > quote.price.total ? quote.price : charged;
-      update(call.id, { option: quote.key, quote: quote.price, charged: capped, answer, words }, { balance: store.balance - (capped.total - SCHEDULE.sort) });
+      const { answer, words, charged, placeholder } = await api.answer(call.text, call.sort, parts, 0);
+      const capped = charged.total > quote.total ? quote : charged;
+      update(call.id, { parts, quote, charged: capped, answer, words, placeholder }, { balance: store.balance - (capped.total - SCHEDULE.sort) });
       setView({ name: 'answer', id: call.id });
     } catch (e) {
       setProblem((e as Error).message);
@@ -68,13 +67,13 @@ export function App() {
     }
   };
 
-  /** A free redo runs the same option again at no charge. */
+  /** A free redo runs the same form again at no charge. */
   const redo = async (call: Call) => {
-    if (!call.option || !call.quote) return;
+    if (!call.parts) return;
     setBusy(true);
     try {
-      const { answer, words } = await api.answer(call.text, call.sort, call.option, 0);
-      update(call.id, { answer, words, redo: false, flagged: false, receipt: undefined, pick: undefined });
+      const { answer, words, placeholder } = await api.answer(call.text, call.sort, call.parts, 0);
+      update(call.id, { answer, words, placeholder, redo: false, flagged: false, receipt: undefined, pick: undefined });
       setView({ name: 'answer', id: call.id });
     } catch (e) {
       setProblem((e as Error).message);
@@ -93,16 +92,16 @@ export function App() {
     return r;
   };
 
-  const manager = async (call: Call, claim: Receipt['claim'], cost: Receipt['cost'], want: Want) => {
-    if (!call.charged || !call.quote || !call.answer || !call.option) return;
+  const manager = async (call: Call, claim: Claim, cost: CostToYou, want: Want) => {
+    if (!call.charged || !call.quote || !call.answer || !call.parts) return;
     setBusy(true);
     setProblem(null);
     try {
-      const { checks } = await api.manager(call.text, call.answer, call.option, claim);
+      const { checks } = await api.manager(call.text, call.answer, call.parts, claim);
       const over = Math.max(0, call.charged.total - call.quote.total);
       const full = { ...checks, priceMatched: over === 0 };
       const decision = managerDecision(full, call.charged, over, want);
-      const n = `${callNumber(call.n)}-R${call.refunds.filter((r) => r.kind === 'manager').length + 1}`;
+      const n = `${String(call.n).padStart(4, '0')}-R${call.refunds.filter((r) => r.kind === 'manager').length + 1}`;
       const receipt = { n, claim, cost, want, checks: full, note: checks.note, decision, at: new Date().toISOString() };
       update(call.id, { receipt, flagged: true, redo: decision.redo, refunds: decision.refund ? [...call.refunds, { kind: 'manager', reason: claim, amount: decision.refund, lines: decision.lines, why: decision.found, at: receipt.at }] : call.refunds }, { balance: store.balance + decision.refund });
     } catch (e) {
@@ -119,20 +118,17 @@ export function App() {
   };
 
   const c = 'id' in view ? current(view.id) : undefined;
-  const head = c ? [c.sort.category, c.sort.place].filter(Boolean).join(' · ') : 'Reference desk';
 
   return (
     <div className="page">
-      <header className="masthead">
-        <button className="brand" onClick={() => setView({ name: 'call' })} aria-label="New call">
-          NOLLA
+      <header className="top">
+        <button className="name" onClick={() => setView({ name: 'call' })}>
+          nolla
         </button>
-        <span className="section">{head}</span>
         <button className="balance" onClick={() => setView({ name: 'register' })}>
-          <span className="num">{fmt(store.balance)}</span> tkn
+          {fmt(store.balance)} tkn · 1,000 = ${RATE_USD_PER_1000.toFixed(2)}
         </button>
       </header>
-      <div className="rule" />
       {problem && <div className="problem">{problem}</div>}
       <main>
         {view.name === 'call' && <CallForm busy={busy} model={model} onSort={sort} onRun={run} />}
@@ -143,13 +139,7 @@ export function App() {
         {view.name === 'manager' && c && <Manager call={c} busy={busy} onDecide={(cl, co, w) => manager(c, cl, co, w)} onRedo={() => redo(c)} onBack={() => setView({ name: 'answer', id: c.id })} />}
         {view.name === 'register' && <Register store={store} model={model} onOpen={(id) => setView({ name: 'answer', id })} onReset={resetAll} />}
       </main>
-      <footer className="colophon">
-        <span>Prices are posted before work runs. 1,000 tkn is {'$'}0.25, a notional rate. Allowance refills Monday.</span>
-        <span>Model: {model}. Every charge is simulated.</span>
-      </footer>
+      <footer className="colophon">Tokens are a game currency. Every charge is simulated.</footer>
     </div>
   );
 }
-
-export type Receipt = NonNullable<Call['receipt']>;
-export { options, price };

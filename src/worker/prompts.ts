@@ -16,18 +16,19 @@ export function sortPrompt(): string {
     '"route": the call depends on local law or rules, medicine or drugs, a money decision with real stakes, a dispute with a person or organization, experience only someone who has done it has, or records a public office holds.',
     '"both": a short general answer helps the person get more out of the desk. When unsure, choose both.',
     'Also give a short category (two or three words, like "Housing" or "Home repair") and the place the call is about if it names or implies one, else "".',
-    'Answer as JSON: {"sort", "category", "place"}.',
+    'Classify the call like a library call number: "code" is three capital letters for the category and a number with one or two decimals, like HSG 4.21, and "path" steps from broad to narrow in two to four short labels, like Housing, Renting, Deposits, Deductions for wear.',
+    'Answer as JSON: {"sort", "category", "place", "code", "path"}.',
   ].join('\n');
 }
 
-export function answerPrompt(option: Option, sort: string, category: string, place: string): string {
+export function answerPrompt(option: Pick<Option, 'label' | 'does' | 'slips' | 'sources' | 'words' | 'check'>, sort: string, category: string, place: string): string {
   const parts = [
     `You are a reference desk answering one call. ${VOICE}`,
     `The call was sorted as "${sort}", category "${category}"${place ? `, place "${place}"` : ''}.`,
     `The person paid for "${option.label}": ${option.does}.`,
     option.sources ? `Open at most ${option.sources} sources and cite them. Number each claim that comes from a source, matching its position in the sources list (1-based). Use 0 for a claim with no source.` : 'Open no sources. Give claims the source number 0 and leave the sources list empty.',
     option.words ? `Write about ${option.words} words in total across "short" and "known".` : 'Write no answer: leave "short" and "known" empty and fill only the desks.',
-    option.slips ? 'Fill "desks" with the desks for this call, most useful first: name, what they do, cost to the person, what to bring, and a URL you are sure of or "". Then "ask_someone": one kind of person to ask, written as a question to the person.' : 'Leave "desks" empty and "ask_someone" empty.',
+    option.slips ? 'Fill "desks" with the desks for this call, most useful first: name, what they do, what to ask them in one line, cost to the person, what to bring, and a URL you are sure of or "". Then "ask_someone": one kind of person to ask, written as a question to the person.' : 'Leave "desks" empty and "ask_someone" empty.',
     '"short": one or two sentences. Lead with the most useful fact. If the honest answer is "it depends", name what it depends on.',
     '"known": short paragraphs of what is known.',
     '"changes_if": two to four conditions that would flip the answer. Empty for a simple how-to.',

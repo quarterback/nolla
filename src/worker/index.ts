@@ -72,21 +72,21 @@ api.post('/sort', async (c) => {
 api.post('/answer', async (c) => {
   const body = AnswerBody.safeParse(await c.req.json().catch(() => null));
   if (!body.success) fail(400, 'Bad request.');
-  const { text, sort, option: key, earlierTurns } = body.data;
-  const option = options(sort.sort).find((o) => o.key === key);
-  if (!option) fail(400, 'That option is not offered for this call.');
+  const { text, sort, parts, earlierTurns } = body.data;
+  if (sort.sort === 'desk' && parts.slips) fail(400, 'A call answered at the desk has no slip.');
+  const option = { ...describe(parts), ...parts };
   const answer = await completeJson(
     c.env,
     [{ role: 'system', content: answerPrompt(option, sort.sort, sort.category, sort.place) }, { role: 'user', content: text }],
     ANSWER_JSON_SCHEMA,
     Answer,
-    () => scriptedAnswer(text, key),
+    () => scriptedAnswer(text, parts),
   );
   const words = countWords(answer);
   const slips = answer.desks.length ? 1 : 0;
-  const sources = Math.min(answer.sources.length, option.sources);
-  const charged = price({ slips, sources, words, check: option.check }, earlierTurns);
-  return c.json({ answer, words, charged });
+  const sources = Math.min(answer.sources.length, parts.sources);
+  const charged = price({ slips, sources, words, check: parts.check }, earlierTurns);
+  return c.json({ answer, words, charged, placeholder: !modelConfigured(c.env) });
 });
 
 /** The manager desk: a separate call with a separate prompt. It checks; the
@@ -94,7 +94,8 @@ api.post('/answer', async (c) => {
 api.post('/manager', async (c) => {
   const body = ManagerBody.safeParse(await c.req.json().catch(() => null));
   if (!body.success) fail(400, 'Bad request.');
-  const { text, answer, option, claim } = body.data;
+  const { text, answer, parts, claim } = body.data;
+  const option = describe(parts).label;
   const checks = await completeJson(
     c.env,
     [
@@ -107,6 +108,14 @@ api.post('/manager', async (c) => {
   );
   return c.json({ checks });
 });
+
+/** The option whose parts these are, or a description of the custom form. */
+function describe(parts: { slips: number; sources: number; words: number; check: boolean }): { label: string; does: string } {
+  const match = options('route').find((o) => o.slips === parts.slips && o.sources === parts.sources && o.words === parts.words && o.check === parts.check) ?? options('desk').find((o) => o.sources === parts.sources && o.words === parts.words && o.check === parts.check);
+  if (match) return { label: match.label, does: match.does };
+  const does = [parts.slips ? 'a slip' : '', parts.sources ? `${parts.sources} sources` : '', parts.words ? `about ${parts.words} words` : '', parts.check ? 'a check' : ''].filter(Boolean).join(', ');
+  return { label: 'Custom', does: `sort, ${does}` };
+}
 
 function countWords(a: Answer): number {
   const text = [a.short, ...a.known.map((k) => k.text), ...a.changes_if, a.ask_someone, a.question_back?.text ?? '', ...(a.question_back?.choices.map((ch) => ch.next) ?? [])].join(' ');

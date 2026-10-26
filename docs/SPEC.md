@@ -1,10 +1,10 @@
 # Spec: nolla
 
-**Status:** second build, October 26, 2026. A story prop and a test bed for a priced reference desk and its refunds.
+**Status:** second build, revised October 26, 2026 to the blue minimal look. A story prop and a test bed for a priced reference desk and its refunds.
 
 ## Why
 
-The owner wants screenshots that tell a story, a login to give a few people, and a place to try interface ideas that are unlike other LLM products. The desk prices its own work in the open, sends people to real desks instead of keeping them talking, and owns its mistakes with refunds. The rules are the owner's `0000th` skill. The look is the owner's "0000th interface" canvas: tabloid answer pages, a quote before anything runs, a bill, and refund boards.
+The owner wants screenshots that tell a story, a login to give a few people, and a place to try interface ideas that are unlike other LLM products. The desk prices its own work in the open, sends people to real desks, and owns its mistakes with refunds. The rules are the owner's `0000th` skill and `EDITORIAL.md`. The look is the row "The design to build: blue minimal with deconstruction" on the owner's "0000th interface" canvas: cobalt ground, white ink, the classification code and path, the tokenized call, the price as a ruled list and a form, white slips and receipts with stamps.
 
 ## The desk
 
@@ -33,4 +33,5 @@ The house rate is 1,000 tkn to $0.25. It is notional. Footprint figures (energy,
 
 - A new scripted call is an entry in `src/worker/script.ts`.
 - A pricing or refund rule changes in `src/shared/desk.ts`, with a test in `test/desk.test.ts` first.
-- A new board from the canvas becomes a view in `src/web`. Keep the masthead, the posted price, and the simulated note.
+- A new board from the canvas becomes a view in `src/web`. Keep the posted price, the classification, and the simulated note.
+- Every interface string passes `scripts/check-copy.mjs`, and the owner signs off on copy.

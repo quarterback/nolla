@@ -6,10 +6,11 @@ export function Register({ store, model, onOpen, onReset }: { store: Store; mode
   const refunded = store.calls.reduce((n, c) => n + c.refunds.reduce((m, r) => m + r.amount, 0), 0);
   return (
     <section className="register">
-      <p className="eyebrow">Register · week of {store.week.slice(0, 10)} · model {model}</p>
+      <h1 className="headline">Register</h1>
+      <p className="machine">week of {store.week.slice(0, 10)} · model {model}</p>
       <p className="giant">{fmt(store.balance)}</p>
       <p className="giant-sub">tkn left of {fmt(ALLOWANCE)} · ${fmt(usd(store.balance), 3)} at the house rate</p>
-      <div className="lines">
+      <div className="grid">
         <div className="row">
           <span>Spent this week</span>
           <span className="num">{fmt(spent)}</span>
@@ -23,7 +24,7 @@ export function Register({ store, model, onOpen, onReset }: { store: Store; mode
           <span className="num">{fmt(store.counterWeek)} of {fmt(COUNTER_WEEK_MAX)}</span>
         </div>
       </div>
-      <h2 className="kicker">Calls</h2>
+      <h2 className="kicker ruled">Calls</h2>
       {store.calls.length === 0 && <p className="lede-s">No calls yet.</p>}
       <div className="calls">
         {[...store.calls].reverse().map((c) => (

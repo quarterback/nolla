@@ -1,8 +1,8 @@
 // Everything the browser keeps: the balance, the week, and every call with
 // its price, answer, refunds and receipts. The Worker holds nothing.
 
-import { ALLOWANCE, weekOf, type Checks, type Claim, type CostToYou, type Decision, type OptionKey, type Price, type PriceLine, type Want } from '../shared/desk';
-import type { Answer, SortResult } from '../shared/desk-schemas';
+import { ALLOWANCE, weekOf, type Checks, type Claim, type CostToYou, type Decision, type Price, type PriceLine, type Want } from '../shared/desk';
+import type { Answer, Parts, SortResult } from '../shared/desk-schemas';
 
 export interface Refund {
   kind: 'counter' | 'manager';
@@ -30,11 +30,13 @@ export interface Call {
   text: string;
   at: string;
   sort: SortResult;
-  option?: OptionKey;
+  parts?: Parts;
   quote?: Price;
   charged?: Price;
   answer?: Answer;
   words?: number;
+  /** The answer text came from the design canvas and awaits approval. */
+  placeholder?: boolean;
   refunds: Refund[];
   receipt?: Receipt;
   flagged: boolean;

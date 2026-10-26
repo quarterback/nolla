@@ -24,7 +24,7 @@ describe('worker', () => {
     expect(body.quotes[0].price.total).toBe(140);
   });
   test('an answer is billed at its real word count', async () => {
-    const res = await app.request('https://0000th.ai/api/answer', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text: 'My toilet keeps running. How do I fix it?', sort: { sort: 'desk', category: 'Home repair', place: '' }, option: 'quick', earlierTurns: 0 }) }, env);
+    const res = await app.request('https://0000th.ai/api/answer', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text: 'My toilet keeps running. How do I fix it?', sort: { sort: 'desk', category: 'Home repair', place: '', code: 'HOM 2.3', path: ['Home repair', 'Plumbing'] }, parts: { slips: 0, sources: 0, words: 100, check: false }, earlierTurns: 0 }) }, env);
     const body = (await res.json()) as { words: number; charged: { total: number } };
     expect(body.charged.total).toBe(40 + body.words);
   });
