@@ -18,6 +18,8 @@ The palette is loud and verified. Every pairing below was computed with the WCAG
 | Inverse text | `#d8ff00` | indigo fill | 13.60 | AAA |
 | Key tray | `#b5d400` | holds `#fdffe8` keys with indigo text | 15.40 | AAA |
 
+**Dark mode.** The loud teal scheme is the dark mode. Ground `#012f2f` teal, ink `#ffcdb4` peach (10.11 AAA), accent and inverse fills `#5bffc8` mint on teal (11.44 AAA). The same layout, type and components apply; only the tokens swap. Respect `prefers-color-scheme: dark` and keep both schemes in the token layer so no component names a hex directly.
+
 Verified alternates, approved for secondary boards and print pieces:
 
 | Pair | Ratio | Level |
