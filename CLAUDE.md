@@ -6,7 +6,7 @@ Before every user-facing response, follow `.claude/skills/plain-language-default
 
 ## What this is
 
-nolla is a reference desk with a price list, built as a story prop and a test bed. Start with `docs/SPEC.md`. The desk sorts each call, posts its price as a formula before any work runs, routes to the people and places that handle the call, answers only what belongs at the desk, and refunds line by line at a counter or through a manager. Tokens are a game currency. It is a demo and reads as one; add no placeholder tags, caveats or hedges to the interface or the docs.
+nolla is a reference desk with a price list, built as a story prop and a test bed. Start with `docs/SPEC.md`. The desk sorts each call, posts its price as a formula before any work runs, routes to the people and places that handle the call, answers the calls that belong at the desk, and refunds line by line at a counter or through a manager. Tokens are a game currency. It is a demo and reads as one; add no placeholder tags, caveats or hedges to the interface or the docs.
 
 The desk's rules are the `0000th` skill and `EDITORIAL.md`, both the owner's. The look follows `docs/GUIDELINES.md` and the chartreuse flow row (ask, generate, pay) on the owner's "0000th interface" design canvas.
 

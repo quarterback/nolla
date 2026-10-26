@@ -8,7 +8,6 @@ export function Counter({ call, store, onPick, onManager, onBack }: { call: Call
   const bill = call.charged;
   if (!bill) return null;
   const struck = new Set(result?.lines.map((l) => l.label));
-  const kept = bill.lines.filter((l) => !struck.has(l.label)).map((l) => name(l.label));
   const gone = result?.lines.map((l) => name(l.label)) ?? [];
 
   return (
@@ -52,7 +51,6 @@ export function Counter({ call, store, onPick, onManager, onBack }: { call: Call
           </section>
           <p className="lede-s">
             {gone.length ? `${list(gone)} ${gone.length > 1 ? 'are' : 'is'} refunded. ` : ''}
-            {kept.length ? `${list(kept)} stay${kept.length > 1 ? '' : 's'} charged. ` : ''}
             {result.amount > 0 ? 'This answer is flagged for review.' : result.why}
           </p>
           <div className="actions">
@@ -102,7 +100,7 @@ function name(label: string) {
 function list(items: string[]) {
   const l = items.map((s) => s.toLowerCase());
   if (l.length <= 1) return cap(l.join(''));
-  return cap(`${l.slice(0, -1).join(', ')} and ${l[l.length - 1]}`);
+  return cap(`${l.slice(0, -1).join(', ')}${l.length > 2 ? ',' : ''} and ${l[l.length - 1]}`);
 }
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -129,8 +127,8 @@ export function Manager({ call, busy, problem, onDecide, onRedo, onBack }: { cal
     const title = { approved: 'Approved', partly: 'Partly approved', denied: 'Denied' }[d.outcome];
     const refundLine = d.lines.length ? `${fmt(d.refund)} tkn, ${d.lines.map((l) => l.label.replace(/^about /, '')).join(' and ')}` : 'none';
     const why = [
-      r.checks.covered ? 'The answer covered the call, so the full charge stays.' : 'The answer did not cover the call.',
-      d.refund > 0 ? `${r.note.replace(/\.$/, '')}, so ${fmt(d.refund)} tkn come back.` : d.outcome === 'denied' ? 'Every check passed. A free redo is open on this call.' : '',
+      r.checks.covered ? 'The answer covered the call.' : 'The answer did not cover the call.',
+      d.refund > 0 ? `${r.note} ${fmt(d.refund)} tkn come back.` : d.outcome === 'denied' ? 'Every check passed. A free redo is open on this call.' : '',
     ]
       .filter(Boolean)
       .join(' ');
@@ -163,7 +161,7 @@ export function Manager({ call, busy, problem, onDecide, onRedo, onBack }: { cal
             <dt>By</dt>
             <dd>Manager desk, separate from the desk that answered</dd>
             <dt>Appeal</dt>
-            <dd>A person reviews appeals within 7 days</dd>
+            <dd>A person reviews appeals within seven days</dd>
           </dl>
         </div>
         <p className="lede-s">{why}</p>

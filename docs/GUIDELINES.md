@@ -139,7 +139,7 @@ A text link, `Something was wrong`, next to `New call`. It opens the counter (â‰
 
 For answer content and its review cases, use [the conversation guide](conversation-design.md). Its proposed wording awaits Ron's approval. These UI guidelines continue to govern layout, components, and states.
 
-Ron owns the prose. Everything written on a screen is placeholder until he approves it. Run every string through prosekeep (vloora profile) and `scripts/check-copy.mjs`, which also scans the .ts/.tsx interface strings prosekeep skips. Banned frames are listed in EDITORIAL.md; the caveat sentence is banned outright.
+Run every string through prosekeep (vloora profile) and `scripts/check-copy.mjs`, which also scans the .ts/.tsx interface strings prosekeep skips. Banned frames are listed in EDITORIAL.md; the caveat sentence is banned outright.
 
 ## Process
 

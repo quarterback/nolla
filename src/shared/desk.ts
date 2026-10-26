@@ -114,19 +114,19 @@ export function counterRefund(reason: CounterReason, charged: Price, overcharge:
   };
   switch (reason) {
     case 'source':
-      return decide([...find(/^check$/), ...find(/words/)], 'Refunded: the check and the answer words. Charged: sorting and sources.');
+      return decide([...find(/^check$/), ...find(/words/)], 'The check and the answer words are refunded.');
     case 'desk':
-      return decide(find(/slip/), 'Refunded: the slip. The next routing on this call is free.');
+      return decide(find(/slip/), 'The slip is refunded. The next routing on this call is free.');
     case 'price':
-      return { amount: overcharge, lines: overcharge ? [{ label: 'over the posted price', tkn: overcharge }] : [], toManager: false, why: overcharge ? 'Refunded: the difference.' : 'The charge matched the posted price.' };
+      return { amount: overcharge, lines: overcharge ? [{ label: 'over the posted price', tkn: overcharge }] : [], toManager: false, why: overcharge ? 'The difference is refunded.' : 'The charge matched the posted price.' };
     case 'asked': {
       const all = charged.lines;
       const amount = sum(all);
-      if (amount <= COUNTER_MAX && weekSoFar + amount <= COUNTER_WEEK_MAX) return { amount, lines: all, toManager: false, why: 'Refunded: the whole charge.' };
+      if (amount <= COUNTER_MAX && weekSoFar + amount <= COUNTER_WEEK_MAX) return { amount, lines: all, toManager: false, why: 'The whole charge is refunded.' };
       return { amount: 0, lines: all, toManager: true, why: `A full refund is ${amount} tkn, over the counter limit. A manager can review it.` };
     }
     default:
-      return { amount: 0, lines: [], toManager: true, why: 'The counter refunds a checkable problem. A manager reviews anything else and can give a free redo.' };
+      return { amount: 0, lines: [], toManager: true, why: 'A manager reviews this claim and can give a free redo.' };
   }
 }
 
