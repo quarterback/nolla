@@ -23,6 +23,8 @@ run_worker_first = ["/api/*"]
 # "1" skips the Access check and, when no model is set, answers from the
 # scenario's script. Never set it in production.
 DEV_MODE = "0"
+# "1" answers from the script until the model is deployed. Access still applies.
+SCRIPTED = "1"
 # Cloudflare Access: the team domain (without https://) and the application
 # audience tag from the Access application for 0000th.ai.
 ACCESS_TEAM_DOMAIN = ""

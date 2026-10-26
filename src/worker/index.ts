@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import type { AppBindings, Env } from './env';
-import { modelConfigured, isDev } from './env';
+import { modelConfigured, scripted } from './env';
 import { requireAccess } from './access';
 import { completeJson } from './model';
 import { answerPrompt, managerPrompt, sortPrompt } from './prompts';
@@ -38,7 +38,7 @@ api.use('*', requireAccess);
 api.get('/me', (c) => c.json({ email: c.get('email') }));
 
 api.get('/health', async (c) => {
-  if (!modelConfigured(c.env)) return c.json({ model: isDev(c.env) ? 'scripted' : 'off' });
+  if (!modelConfigured(c.env)) return c.json({ model: scripted(c.env) ? 'scripted' : 'off' });
   try {
     const res = await fetch(`${c.env.MODAL_BASE_URL}/v1/models`, {
       headers: { authorization: `Bearer ${c.env.MODAL_TOKEN}` },
