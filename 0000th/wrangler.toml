@@ -1,0 +1,30 @@
+name = "0000th"
+main = "src/worker/index.ts"
+compatibility_date = "2026-08-15"
+compatibility_flags = ["nodejs_compat"]
+
+# Access covers the custom domain. The workers.dev address stays off so there
+# is no way around it.
+workers_dev = false
+routes = [{ pattern = "0000th.ai", custom_domain = true }]
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*"]
+
+[vars]
+# "1" skips the Access check and, when no model is set, answers from the
+# scenario's script. Never set it in production.
+DEV_MODE = "0"
+# Cloudflare Access: the team domain (without https://) and the application
+# audience tag from the Access application for 0000th.ai.
+ACCESS_TEAM_DOMAIN = ""
+ACCESS_AUD = ""
+# The model name vLLM serves. Must match modal/serve.py.
+MODEL_NAME = "Qwen/Qwen2.5-7B-Instruct"
+
+# Secrets, set with `wrangler secret put`:
+#   MODAL_BASE_URL   the Modal web endpoint, for example https://you--0000th-model-serve.modal.run
+#   MODAL_TOKEN      the same value as the PROXY_TOKEN Modal secret
