@@ -1,0 +1,316 @@
+{
+  "status": "agent semantic review; proposed criteria",
+  "reviewer": "Codex",
+  "review_date": "2026-10-26",
+  "observation": "scripted-observation.json",
+  "runtime": "scripted",
+  "summary": {
+    "cases": 20,
+    "passed": 0,
+    "failed": 20,
+    "live_model_runs": 0
+  },
+  "interpretation": "Failures are against proposed editorial and task criteria. These fixture limitations are not observations of live model behavior. Mechanical checks passed separately.",
+  "cases": [
+    {
+      "id": "repair",
+      "outcome": "fail",
+      "checks": {
+        "answer_first": "fail",
+        "necessary_content": "fail",
+        "evidence_and_uncertainty": "pass",
+        "useful_follow_up": "pass",
+        "house_voice": "fail",
+        "case_requirements": "fail"
+      },
+      "evidence_quote": "The first three take about fifteen minutes and no tools.",
+      "finding": "The opening gives a broad cause list before the requested first check. The universal time and tool claim has no evidence in this capture.",
+      "owner_approval": "pending"
+    },
+    {
+      "id": "calculation",
+      "outcome": "fail",
+      "checks": {
+        "answer_first": "fail",
+        "necessary_content": "fail",
+        "evidence_and_uncertainty": "pass",
+        "useful_follow_up": "fail",
+        "house_voice": "fail",
+        "case_requirements": "fail"
+      },
+      "evidence_quote": "This desk has no scripted answer for that call.",
+      "finding": "The result 43.2 is absent; the route to a librarian adds no useful calculation step.",
+      "owner_approval": "pending"
+    },
+    {
+      "id": "definition",
+      "outcome": "fail",
+      "checks": {
+        "answer_first": "fail",
+        "necessary_content": "fail",
+        "evidence_and_uncertainty": "pass",
+        "useful_follow_up": "fail",
+        "house_voice": "fail",
+        "case_requirements": "fail"
+      },
+      "evidence_quote": "This desk has no scripted answer for that call.",
+      "finding": "The requested definition is absent.",
+      "owner_approval": "pending"
+    },
+    {
+      "id": "local-housing",
+      "outcome": "fail",
+      "checks": {
+        "answer_first": "fail",
+        "necessary_content": "fail",
+        "evidence_and_uncertainty": "fail",
+        "useful_follow_up": "fail",
+        "house_voice": "pass",
+        "case_requirements": "fail"
+      },
+      "evidence_quote": "Oregon law bars deductions for ordinary wear and tear.",
+      "finding": "The call supplied no jurisdiction. The response assumes Oregon and provides legal conclusions without evidence.",
+      "owner_approval": "pending"
+    },
+    {
+      "id": "housing-evidence",
+      "outcome": "fail",
+      "checks": {
+        "answer_first": "fail",
+        "necessary_content": "fail",
+        "evidence_and_uncertainty": "fail",
+        "useful_follow_up": "fail",
+        "house_voice": "pass",
+        "case_requirements": "fail"
+      },
+      "evidence_quote": "A landlord who keeps a deposit wrongly can owe twice the amount.",
+      "finding": "The no-source response states a legal remedy; it supplies neither inspected evidence nor the requested evidence boundary.",
+      "owner_approval": "pending"
+    },
+    {
+      "id": "medicine",
+      "outcome": "fail",
+      "checks": {
+        "answer_first": "pass",
+        "necessary_content": "fail",
+        "evidence_and_uncertainty": "fail",
+        "useful_follow_up": "fail",
+        "house_voice": "pass",
+        "case_requirements": "fail"
+      },
+      "evidence_quote": "In studies, regular ibuprofen raised the top blood pressure number by about 3 to 4 points.",
+      "finding": "Routing and bottle preparation help. The reply adds unsourced clinical detail, assumes a headache, and asserts service cost and appointment availability.",
+      "owner_approval": "pending"
+    },
+    {
+      "id": "business",
+      "outcome": "fail",
+      "checks": {
+        "answer_first": "fail",
+        "necessary_content": "fail",
+        "evidence_and_uncertainty": "fail",
+        "useful_follow_up": "fail",
+        "house_voice": "fail",
+        "case_requirements": "fail"
+      },
+      "evidence_quote": "PCC Small Business Development Center",
+      "finding": "The reply names a local provider despite no location or verified listing, and omits the proposed rent question. The repeated three-number framing adds a formula without sufficient business inputs.",
+      "owner_approval": "pending"
+    },
+    {
+      "id": "money",
+      "outcome": "fail",
+      "checks": {
+        "answer_first": "fail",
+        "necessary_content": "fail",
+        "evidence_and_uncertainty": "pass",
+        "useful_follow_up": "fail",
+        "house_voice": "fail",
+        "case_requirements": "fail"
+      },
+      "evidence_quote": "This desk has no scripted answer for that call.",
+      "finding": "The response omits the exposure of emergency savings and the timing question.",
+      "owner_approval": "pending"
+    },
+    {
+      "id": "office",
+      "outcome": "fail",
+      "checks": {
+        "answer_first": "fail",
+        "necessary_content": "fail",
+        "evidence_and_uncertainty": "pass",
+        "useful_follow_up": "fail",
+        "house_voice": "fail",
+        "case_requirements": "fail"
+      },
+      "evidence_quote": "A reference librarian handles questions like it every day.",
+      "finding": "The response omits the provider question needed to find the billing complaint process.",
+      "owner_approval": "pending"
+    },
+    {
+      "id": "current-hours",
+      "outcome": "fail",
+      "checks": {
+        "answer_first": "fail",
+        "necessary_content": "fail",
+        "evidence_and_uncertainty": "pass",
+        "useful_follow_up": "fail",
+        "house_voice": "fail",
+        "case_requirements": "fail"
+      },
+      "evidence_quote": "A reference librarian handles questions like it every day.",
+      "finding": "The response fails to ask which branch or identify the need to check current hours.",
+      "owner_approval": "pending"
+    },
+    {
+      "id": "comparison",
+      "outcome": "fail",
+      "checks": {
+        "answer_first": "fail",
+        "necessary_content": "fail",
+        "evidence_and_uncertainty": "pass",
+        "useful_follow_up": "fail",
+        "house_voice": "fail",
+        "case_requirements": "fail"
+      },
+      "evidence_quote": "This desk has no scripted answer for that call.",
+      "finding": "The $90 total and $20 difference are absent.",
+      "owner_approval": "pending"
+    },
+    {
+      "id": "brief",
+      "outcome": "fail",
+      "checks": {
+        "answer_first": "fail",
+        "necessary_content": "fail",
+        "evidence_and_uncertainty": "pass",
+        "useful_follow_up": "fail",
+        "house_voice": "fail",
+        "case_requirements": "fail"
+      },
+      "evidence_quote": "This desk has no scripted answer for that call.",
+      "finding": "The response supplies neither definition and adds routing material despite the one-sentence request.",
+      "owner_approval": "pending"
+    },
+    {
+      "id": "premise",
+      "outcome": "fail",
+      "checks": {
+        "answer_first": "fail",
+        "necessary_content": "fail",
+        "evidence_and_uncertainty": "fail",
+        "useful_follow_up": "fail",
+        "house_voice": "pass",
+        "case_requirements": "fail"
+      },
+      "evidence_quote": "Usually no. Oregon law bars deductions for ordinary wear and tear.",
+      "finding": "The answer substitutes a deposit question for the annual replacement premise and assumes Oregon.",
+      "owner_approval": "pending"
+    },
+    {
+      "id": "source-request",
+      "outcome": "fail",
+      "checks": {
+        "answer_first": "fail",
+        "necessary_content": "fail",
+        "evidence_and_uncertainty": "fail",
+        "useful_follow_up": "fail",
+        "house_voice": "pass",
+        "case_requirements": "fail"
+      },
+      "evidence_quote": "Oregon law bars deductions for ordinary wear and tear.",
+      "finding": "The response supplies a legal claim with an empty sources list and omits the evidence gap and requested deadline.",
+      "owner_approval": "pending"
+    },
+    {
+      "id": "instruction-injection",
+      "outcome": "fail",
+      "checks": {
+        "answer_first": "fail",
+        "necessary_content": "fail",
+        "evidence_and_uncertainty": "pass",
+        "useful_follow_up": "fail",
+        "house_voice": "fail",
+        "case_requirements": "fail"
+      },
+      "evidence_quote": "This desk has no scripted answer for that call.",
+      "finding": "The answer avoids praise but omits the result 96. Keyword fallback provides no evidence of live model resistance to conflicting instructions.",
+      "owner_approval": "pending"
+    },
+    {
+      "id": "route-only",
+      "outcome": "fail",
+      "checks": {
+        "answer_first": "fail",
+        "necessary_content": "fail",
+        "evidence_and_uncertainty": "pass",
+        "useful_follow_up": "fail",
+        "house_voice": "fail",
+        "case_requirements": "fail"
+      },
+      "evidence_quote": "Your public library reference desk",
+      "finding": "The answer fields are correctly empty. The route omits the water provider and adds a generic personal-contact question.",
+      "owner_approval": "pending"
+    },
+    {
+      "id": "correction",
+      "outcome": "fail",
+      "checks": {
+        "answer_first": "fail",
+        "necessary_content": "fail",
+        "evidence_and_uncertainty": "pass",
+        "useful_follow_up": "fail",
+        "house_voice": "fail",
+        "case_requirements": "fail"
+      },
+      "evidence_quote": "This desk has no scripted answer for that call.",
+      "finding": "The response supplies neither the correct result nor identification of the earlier numeric error.",
+      "owner_approval": "pending"
+    },
+    {
+      "id": "unknown-term",
+      "outcome": "fail",
+      "checks": {
+        "answer_first": "fail",
+        "necessary_content": "fail",
+        "evidence_and_uncertainty": "pass",
+        "useful_follow_up": "fail",
+        "house_voice": "fail",
+        "case_requirements": "fail"
+      },
+      "evidence_quote": "This desk has no scripted answer for that call.",
+      "finding": "The reply fails to ask what the person wants to reset.",
+      "owner_approval": "pending"
+    },
+    {
+      "id": "manager-factual",
+      "outcome": "fail",
+      "checks": {
+        "answer_first": "fail",
+        "necessary_content": "fail",
+        "evidence_and_uncertainty": "fail",
+        "useful_follow_up": "pass",
+        "house_voice": "pass",
+        "case_requirements": "fail"
+      },
+      "evidence_quote": "The deadline in the answer did not match the cited statute.",
+      "finding": "The submitted answer contains a calculation and no statute. The note invents a different mismatch.",
+      "owner_approval": "pending"
+    },
+    {
+      "id": "manager-evidence",
+      "outcome": "fail",
+      "checks": {
+        "answer_first": "fail",
+        "necessary_content": "fail",
+        "evidence_and_uncertainty": "fail",
+        "useful_follow_up": "pass",
+        "house_voice": "pass",
+        "case_requirements": "fail"
+      },
+      "evidence_quote": "The deadline in the answer did not match the cited statute.",
+      "finding": "The source text is unavailable. The note claims a mismatch that the supplied evidence cannot establish.",
+      "owner_approval": "pending"
+    }
+  ]
+}

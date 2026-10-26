@@ -32,3 +32,7 @@ The Worker verifies the Access token on every `/api` request, and `workers.dev` 
 ## Checks
 
 `npm run check` runs the type checks, the build and the tests. `npm run check:docs` runs prosekeep and `closedtab check`.
+
+## Content review
+
+The [conversation guide](docs/conversation-design.md) defines proposed response rules and a review procedure alongside the current UI guidelines. The [20 example cases](docs/conversation-examples.md) pair captured scripted responses with findings and proposed wording for Ron's review. Run `node scripts/review-content.mjs content-baseline/scripted-observation.json` for the mechanical response checks. Semantic review and owner approval are recorded separately.

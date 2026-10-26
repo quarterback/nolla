@@ -2,6 +2,8 @@
 
 Step by step instructions for applying `docs/GUIDELINES.md` to the web app in `src/web/`. Work through the sections in order. Run `npm run check` and `npm run check:docs` before opening the pull request, and write a closedtab record when done.
 
+For changes to answer content, use [the conversation guide](conversation-design.md) and its review cases alongside these visual instructions. The guide supplies proposed content rules; Ron approves reference wording before it is adopted. Streaming, pricing, the tour, and visual design keep their existing behavior in the content baseline change.
+
 ## 1. Retheme the tokens
 
 All color lives in `:root` in `src/web/styles.css`. Replace the cobalt set with the verified palette:
