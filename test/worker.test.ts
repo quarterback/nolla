@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'vitest';
 import { app } from '../src/worker/index';
 
-const env = { DEV_MODE: '1', ACCESS_TEAM_DOMAIN: '', ACCESS_AUD: '', MODEL_NAME: 'x', ASSETS: {} as Fetcher };
+const ASSETS = { fetch: async () => new Response('page', { status: 200 }) } as unknown as Fetcher;
+const env = { DEV_MODE: '1', ACCESS_TEAM_DOMAIN: '', ACCESS_AUD: '', MODEL_NAME: 'x', ASSETS };
 
 describe('worker', () => {
   test('the old domain redirects to the apex domain, path and query kept', async () => {
@@ -10,6 +11,11 @@ describe('worker', () => {
       expect(res.status).toBe(301);
       expect(res.headers.get('location')).toBe('https://0000th.ai/a/b?y=1');
     }
+  });
+  test('a page on the apex domain comes from the assets', async () => {
+    const res = await app.request('https://0000th.ai/', {}, env);
+    expect(res.status).toBe(200);
+    expect(await res.text()).toBe('page');
   });
   test('the apex domain is served', async () => {
     const res = await app.request('https://0000th.ai/api/health', {}, env);

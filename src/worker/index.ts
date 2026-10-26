@@ -124,6 +124,8 @@ function countWords(a: Answer): number {
 
 app.route('/api', api);
 app.all('/api/*', (c) => c.json({ error: 'Not found' }, 404));
+// Everything else is the built interface.
+app.all('*', (c) => c.env.ASSETS.fetch(c.req.raw));
 
 export default { fetch: app.fetch } satisfies ExportedHandler<Env>;
 export { app };
