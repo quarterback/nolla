@@ -83,3 +83,42 @@ describe('the model', () => {
     expect(((await res.json()) as { sort: { sort: string } }).sort.sort).toBe('desk');
   });
 });
+
+describe('the desk and the chat', () => {
+  const modelEnv = { ...env, MODEL_NAME: 'm', DEV_MODE: '1', SCRIPTED: '0', MODAL_BASE_URL: 'https://model.test', MODAL_TOKEN: 'wk-a.ws-b' };
+  const realFetch = globalThis.fetch;
+  const json = (path: string, body: unknown) => app.request(`https://0000th.ai${path}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }, modelEnv);
+
+  test('a call the model files as a desk answer drops the slip and is answered', async () => {
+    const answer = { short: 'x', known: [], changes_if: [], desks: [], ask_someone: '', question_back: null, sources: [] };
+    globalThis.fetch = (async () => new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify(answer) } }] }))) as typeof fetch;
+    const res = await json('/api/answer', { text: 'What is 18 percent of 240?', sort: { sort: 'desk', category: 'Math', place: '', code: 'MAT 1.0', path: ['Math'] }, parts: { slips: 1, sources: 2, words: 180, check: false }, earlierTurns: 0 });
+    globalThis.fetch = realFetch;
+    expect(res.status).toBe(200);
+  });
+
+  test('the chat streams the model text, its reasoning and its token counts', async () => {
+    const sse = [
+      'data: {"choices":[{"delta":{"reasoning_content":"think"}}]}',
+      'data: {"choices":[{"delta":{"content":"Hi"}}]}',
+      'data: {"choices":[],"usage":{"prompt_tokens":3,"completion_tokens":2}}',
+      'data: [DONE]',
+      '',
+    ].join('\n\n');
+    globalThis.fetch = (async () => new Response(sse)) as typeof fetch;
+    const res = await json('/api/chat', { messages: [{ role: 'user', content: 'hello' }] });
+    const text = await res.text();
+    globalThis.fetch = realFetch;
+    expect(text).toContain('event: delta');
+    expect(text).toContain('"c":"Hi"');
+    expect(text).toContain('"r":"think"');
+    expect(text).toContain('"completion":2');
+    expect(text).toContain('event: done');
+  });
+
+  test('a page without a file extension comes from the assets', async () => {
+    const res = await app.request('https://0000th.ai/chat', {}, modelEnv);
+    expect(res.status).toBe(200);
+    expect(await res.text()).toBe('page');
+  });
+});

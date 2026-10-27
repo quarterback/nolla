@@ -4,12 +4,12 @@ import { streamSSE } from 'hono/streaming';
 import type { AppBindings, Env } from './env';
 import { modelConfigured, scripted } from './env';
 import { requireAccess } from './access';
-import { completeJson, streamJson } from './model';
+import { completeJson, streamChat, streamJson } from './model';
 import { answerPrompt, managerPrompt, sortPrompt } from './prompts';
 import { scriptedAnswer, scriptedManager, scriptedSort } from './script';
 import { fail } from './util';
 import { options, price } from '../shared/desk';
-import { Answer, ANSWER_JSON_SCHEMA, AnswerBody, ManagerBody, ManagerChecks, MANAGER_JSON_SCHEMA, SORT_JSON_SCHEMA, SortBody, SortResult } from '../shared/desk-schemas';
+import { Answer, ANSWER_JSON_SCHEMA, AnswerBody, ChatBody, ManagerBody, ManagerChecks, MANAGER_JSON_SCHEMA, SORT_JSON_SCHEMA, SortBody, SortResult } from '../shared/desk-schemas';
 
 const HOME = '0000th.ai';
 
@@ -75,8 +75,9 @@ api.post('/sort', async (c) => {
 api.post('/answer', async (c) => {
   const body = AnswerBody.safeParse(await c.req.json().catch(() => null));
   if (!body.success) fail(400, 'Bad request.');
-  const { text, sort, parts, earlierTurns } = body.data;
-  if (sort.sort === 'desk' && parts.slips) fail(400, 'A call answered at the desk has no slip.');
+  const { text, sort, earlierTurns } = body.data;
+  // A call answered at the desk has no slip; the menu's price always includes one.
+  const parts = sort.sort === 'desk' ? { ...body.data.parts, slips: 0 } : body.data.parts;
   const option = { ...describe(parts), ...parts };
   const messages = [{ role: 'system' as const, content: answerPrompt(option, sort.sort, sort.category, sort.place) }, { role: 'user' as const, content: text }];
   const finish = (answer: Answer) => {
@@ -131,6 +132,24 @@ function describe(parts: { slips: number; sources: number; words: number; check:
   return { label: 'Custom', does: `sort, ${does}` };
 }
 
+/** Plain chat: the model's own text, streamed, with nothing charged. */
+api.post('/chat', async (c) => {
+  const body = ChatBody.safeParse(await c.req.json().catch(() => null));
+  if (!body.success) fail(400, 'Bad request.');
+  return streamSSE(c, async (s) => {
+    try {
+      for await (const ev of streamChat(c.env, body.data.messages)) {
+        if (ev.type === 'meta') await s.writeSSE({ event: 'meta', data: JSON.stringify({ model: ev.model }) });
+        else if (ev.type === 'delta') await s.writeSSE({ event: 'delta', data: JSON.stringify({ c: ev.content, r: ev.reasoning }) });
+        else await s.writeSSE({ event: 'usage', data: JSON.stringify({ prompt: ev.prompt, completion: ev.completion }) });
+      }
+      await s.writeSSE({ event: 'done', data: '{}' });
+    } catch (err) {
+      await s.writeSSE({ event: 'error', data: JSON.stringify(err instanceof HTTPException ? err.message : 'The model did not answer.') });
+    }
+  });
+});
+
 function countWords(a: Answer): number {
   const text = [a.short, ...a.known.map((k) => k.text), ...a.changes_if, a.ask_someone, a.question_back?.text ?? '', ...(a.question_back?.choices.map((ch) => ch.next) ?? [])].join(' ');
   return text.split(/\s+/).filter(Boolean).length;
@@ -139,7 +158,12 @@ function countWords(a: Answer): number {
 app.route('/api', api);
 app.all('/api/*', (c) => c.json({ error: 'Not found' }, 404));
 // Everything else is the built interface.
-app.all('*', (c) => c.env.ASSETS.fetch(c.req.raw));
+app.all('*', (c) => {
+  const url = new URL(c.req.url);
+  // A path with no file extension is a page of the interface, such as /chat.
+  if (c.req.method === 'GET' && !/\.[a-z0-9]+$/i.test(url.pathname)) return c.env.ASSETS.fetch(new Request(new URL('/', url), c.req.raw));
+  return c.env.ASSETS.fetch(c.req.raw);
+});
 
 export default { fetch: app.fetch } satisfies ExportedHandler<Env>;
 export { app };

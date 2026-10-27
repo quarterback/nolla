@@ -10,10 +10,12 @@ import { AnswerPage } from './AnswerPage';
 import { Counter, Manager } from './Refunds';
 import { Register } from './Register';
 import { Front } from './Front';
+import { Chat } from './Chat';
 import { TOUR, TOUR_BALANCE, tourGenerating, tourState, type TourState } from './tour';
 
 type View =
   | { name: 'front' }
+  | { name: 'chat' }
   | { name: 'call' }
   | { name: 'generating'; id: string }
   | { name: 'answer'; id: string }
@@ -24,7 +26,7 @@ type View =
 
 export function App() {
   const [store, setStore] = useState<Store>(() => load());
-  const [view, setView] = useState<View>({ name: 'front' });
+  const [view, setView] = useState<View>(() => (window.location.pathname.replace(/\/$/, '') === '/chat' ? { name: 'chat' } : { name: 'front' }));
   const [tour, setTour] = useState<Call | null>(null);
   const [model, setModel] = useState<string>('checking');
   const [busy, setBusy] = useState(false);
@@ -143,11 +145,14 @@ export function App() {
         <button className="name" onClick={() => setView({ name: 'front' })}>
           nolla
         </button>
-        <button className="balance" onClick={() => setView({ name: 'register' })}>
-          {view.name === 'tour' ? tkn(TOUR_BALANCE) : tkn(store.balance)}
-        </button>
+        {view.name !== 'chat' && (
+          <button className="balance" onClick={() => setView({ name: 'register' })}>
+            {view.name === 'tour' ? tkn(TOUR_BALANCE) : tkn(store.balance)}
+          </button>
+        )}
       </header>
       <main>
+        {view.name === 'chat' && <Chat />}
         {view.name === 'front' && <Front onStart={() => setView({ name: 'call' })} onTour={openTour} />}
         {view.name === 'tour' && tour && (
           <>
