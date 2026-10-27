@@ -9,47 +9,63 @@ import { fail } from './util';
 
 export type ChatMessage = { role: 'system' | 'user' | 'assistant'; content: string };
 
-/** The model name the endpoint serves. MODEL_NAME when set; otherwise the
- * first model the endpoint lists, remembered for the life of the isolate. */
+/** The name the Modal endpoint serves when it does not list one. */
+const DEFAULT_MODEL = '0000th';
+
+/** What the endpoint said, in plain words. */
+function refuse(status: number): never {
+  if (status === 401 || status === 403) fail(502, 'The model rejected the token.');
+  if (status >= 500 || status === 408 || status === 425 || status === 429) fail(503, 'The model is starting.');
+  fail(502, `The model answered with status ${status}.`);
+}
+
+/** The model name: MODEL_NAME when set, else the first model the endpoint
+ * lists, else the endpoint's own name. A listing that fails for a reason
+ * other than the token never blocks a call. */
 let discovered: string | null = null;
 async function modelName(env: Env): Promise<string> {
   if (env.MODEL_NAME) return env.MODEL_NAME;
   if (discovered) return discovered;
   const res = await fetch(`${env.MODAL_BASE_URL}/v1/models`, { headers: { authorization: `Bearer ${env.MODAL_TOKEN}` } });
-  if (!res.ok) fail(503, res.status >= 500 ? 'The model is starting. Try again in a minute.' : 'The model did not answer.');
-  const body = (await res.json()) as { data?: { id: string }[] };
-  const id = body.data?.[0]?.id;
-  if (!id) fail(502, 'The model endpoint lists no model.');
-  discovered = id;
-  return id;
+  if (res.status === 401 || res.status === 403) refuse(res.status);
+  if (!res.ok) return DEFAULT_MODEL;
+  const body = (await res.json().catch(() => ({}))) as { data?: { id: string }[] };
+  discovered = body.data?.[0]?.id ?? DEFAULT_MODEL;
+  return discovered;
 }
 
-/** Whether the endpoint takes a JSON schema. Flipped off after one refusal. */
-let schemaOk = true;
+/** Request shapes, strictest first. An endpoint that refuses one with 400 or
+ * 422 gets the next; the first that works is kept for the isolate. */
+let variant = 0;
+const VARIANTS = 4;
 
-function requestBody(model: string, messages: ChatMessage[], schema: unknown, stream: boolean) {
-  const body: Record<string, unknown> = { model, messages, stream, temperature: 0.3, max_tokens: 1200 };
-  if (schemaOk) body.response_format = { type: 'json_schema', json_schema: { name: 'reply', schema } };
-  else body.response_format = { type: 'json_object' };
+function requestBody(model: string, messages: ChatMessage[], schema: unknown, stream: boolean, v: number) {
+  const body: Record<string, unknown> = { model, messages, stream, temperature: 0.3, max_tokens: 1500 };
+  if (v < 3) body.chat_template_kwargs = { enable_thinking: false };
+  if (v === 0) body.response_format = { type: 'json_schema', json_schema: { name: 'reply', schema } };
+  else if (v < 3) body.response_format = { type: 'json_object' };
   return JSON.stringify(body);
 }
 
 async function call(env: Env, messages: ChatMessage[], schema: unknown, stream: boolean): Promise<Response> {
   const model = await modelName(env);
-  const send = () =>
-    fetch(`${env.MODAL_BASE_URL}/v1/chat/completions`, {
+  let res: Response;
+  for (;;) {
+    res = await fetch(`${env.MODAL_BASE_URL}/v1/chat/completions`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', authorization: `Bearer ${env.MODAL_TOKEN}` },
-      body: requestBody(model, messages, schema, stream),
+      body: requestBody(model, messages, schema, stream, variant),
     });
-  let res = await send();
-  if (res.status === 400 && schemaOk) {
-    // The endpoint refused the schema parameter: ask for a JSON object instead.
-    schemaOk = false;
-    res = await send();
+    if ((res.status === 400 || res.status === 422) && variant < VARIANTS - 1) {
+      variant += 1;
+      continue;
+    }
+    break;
   }
-  if (res.status === 401 || res.status === 403) fail(502, 'The model refused the token.');
-  if (!res.ok || !res.body) fail(503, res.status >= 500 ? 'The model is starting. Try again in a minute.' : 'The model did not answer.');
+  if (!res.ok || !res.body) {
+    console.error('model', res.status, (await res.text().catch(() => '')).slice(0, 300));
+    refuse(res.status);
+  }
   return res;
 }
 
@@ -133,9 +149,14 @@ export async function completeJson<T>(
   return second;
 }
 
+/** The JSON object in the model's text, read past any reasoning block. */
 function parse<T>(raw: string, zod: ZodType<T>): T | null {
+  const text = raw.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+  const from = text.indexOf('{');
+  const to = text.lastIndexOf('}');
+  if (from < 0 || to < from) return null;
   try {
-    const r = zod.safeParse(JSON.parse(raw.trim()));
+    const r = zod.safeParse(JSON.parse(text.slice(from, to + 1)));
     return r.success ? r.data : null;
   } catch {
     return null;

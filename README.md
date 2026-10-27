@@ -20,7 +20,7 @@ Open http://localhost:8787. With `DEV_MODE=1` and no model set, four calls answe
 
 ## Deploy
 
-A push to `main` deploys through GitHub Actions (`.github/workflows/deploy.yml`). Add two repository secrets once: `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. Add `MODAL_TOKEN` as a repository secret too and the next deploy connects the model; the endpoint URL is in `wrangler.toml`. Until then the desk answers from the script. Deploying by hand works too:
+A push to `main` deploys through GitHub Actions (`.github/workflows/deploy.yml`). Add two repository secrets once: `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. Add the Modal proxy token as `MODAL_TOKEN`, in the form `wk-<id>.ws-<secret>`, and the next deploy connects the model; the endpoint URL is in `wrangler.toml`. Until then the desk answers from the script. Deploying by hand works too:
 
 1. Deploy the model on Modal and put its endpoint URL in `wrangler.toml`.
 2. In Cloudflare Zero Trust, add an Access application for `0000th.ai` with an email allowlist. Copy the team domain and the application audience tag into `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` in `wrangler.toml`.

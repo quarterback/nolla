@@ -44,7 +44,7 @@ html, body { margin: 0; background: var(--ground); color: var(--ink); }
 body { font: 17px/1.5 var(--sans); }
 button { font: inherit; color: inherit; background: none; border: 0; border-radius: 0; padding: 0; cursor: pointer; }
 button:disabled { cursor: default; }
-button:focus-visible, a:focus-visible, textarea:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+button:focus-visible, a:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
 .primary:focus-visible { outline-color: var(--fill-text); outline-offset: -5px; }
 .choices button.on:focus-visible { outline-color: var(--ground); outline-offset: -5px; }
 a { color: var(--ink); }
@@ -171,6 +171,8 @@ textarea::placeholder { color: var(--dim); }
 
 /* The front page and the tour. */
 .front .display { margin-top: 8px; }
+.tour-menu { margin-top: 28px; border-top: 3px solid var(--ink); }
+.tour-menu summary { padding: 12px 0; min-height: 48px; cursor: pointer; font-size: 17px; font-weight: 700; }
 .tour { list-style: none; margin: 0; padding: 0; }
 .tour li { border-bottom: 1px solid var(--ink); }
 .tour button { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 12px; width: 100%; min-height: 48px; text-align: left; padding: 11px 0; align-items: baseline; }
