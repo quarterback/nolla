@@ -168,3 +168,56 @@ async function complete(env: Env, messages: ChatMessage[], schema: unknown): Pro
   const body = (await res.json()) as { choices?: { message?: { content?: string } }[] };
   return body.choices?.[0]?.message?.content ?? '';
 }
+
+export type ChatEvent =
+  | { type: 'meta'; model: string }
+  | { type: 'delta'; content: string; reasoning: string }
+  | { type: 'usage'; prompt: number; completion: number };
+
+/** Plain chat: the model's own text with no schema and no change to how it
+ * reasons. Yields content and reasoning as they arrive, then token counts. */
+export async function* streamChat(env: Env, messages: ChatMessage[]): AsyncGenerator<ChatEvent> {
+  if (!modelConfigured(env)) fail(503, 'The model is not connected.');
+  const model = await modelName(env);
+  yield { type: 'meta', model };
+  let res: Response | null = null;
+  for (const withUsage of [true, false]) {
+    res = await fetch(`${env.MODAL_BASE_URL}/v1/chat/completions`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${env.MODAL_TOKEN}` },
+      body: JSON.stringify({ model, messages, stream: true, ...(withUsage ? { stream_options: { include_usage: true } } : {}) }),
+    });
+    if (res.status !== 400 && res.status !== 422) break;
+  }
+  if (!res || !res.ok || !res.body) {
+    console.error('model chat', res?.status, (await res?.text().catch(() => ''))?.slice(0, 300));
+    refuse(res?.status ?? 503);
+  }
+  const reader = res.body!.pipeThrough(new TextDecoderStream()).getReader();
+  let buffer = '';
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += value;
+    const lines = buffer.split('\n');
+    buffer = lines.pop() ?? '';
+    for (const line of lines) {
+      if (!line.startsWith('data:')) continue;
+      const data = line.slice(5).trim();
+      if (data === '[DONE]') return;
+      try {
+        const json = JSON.parse(data) as {
+          choices?: { delta?: { content?: string; reasoning_content?: string; reasoning?: string } }[];
+          usage?: { prompt_tokens?: number; completion_tokens?: number };
+        };
+        const d = json.choices?.[0]?.delta;
+        const content = d?.content ?? '';
+        const reasoning = d?.reasoning_content ?? d?.reasoning ?? '';
+        if (content || reasoning) yield { type: 'delta', content, reasoning };
+        if (json.usage) yield { type: 'usage', prompt: json.usage.prompt_tokens ?? 0, completion: json.usage.completion_tokens ?? 0 };
+      } catch {
+        // A partial line; the next chunk completes it.
+      }
+    }
+  }
+}

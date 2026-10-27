@@ -29,6 +29,10 @@ A push to `main` deploys through GitHub Actions (`.github/workflows/deploy.yml`)
 
 The Worker verifies the Access token on every `/api` request, and `workers.dev` is off. `nollanolla.com` and `www.nollanolla.com` are routes on the same Worker and redirect to `0000th.ai`, the apex domain.
 
+## Chat
+
+`/chat` is the model with no desk around it: plain messages, the model's own text streamed back with its reasoning, timing and token counts, nothing charged.
+
 ## Checks
 
 `npm run check` runs the type checks, the build and the tests. `npm run check:docs` runs prosekeep and `closedtab check`.

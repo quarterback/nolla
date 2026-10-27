@@ -80,6 +80,9 @@ export const MANAGER_JSON_SCHEMA = {
 } as const;
 
 /** Bodies over the API. */
+export const ChatBody = z.object({
+  messages: z.array(z.object({ role: z.enum(['system', 'user', 'assistant']), content: z.string().max(8000) })).min(1).max(40),
+});
 export const SortBody = z.object({ text: z.string().min(3).max(2000), earlierTurns: z.number().int().min(0).max(50) });
 export const Parts = z.object({ slips: z.number().int().min(0).max(1), sources: z.number().int().min(0).max(4), words: z.number().int().min(0).max(400), check: z.boolean() });
 export type Parts = z.infer<typeof Parts>;
