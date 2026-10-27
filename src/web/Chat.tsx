@@ -18,7 +18,9 @@ export function Chat() {
   const [model, setModel] = useState('');
   const end = useRef<HTMLDivElement>(null);
 
-  useEffect(() => end.current?.scrollIntoView({ block: 'end' }), [turns]);
+  useEffect(() => {
+    end.current?.scrollIntoView({ block: 'end' });
+  }, [turns]);
 
   const send = async () => {
     const text = draft.trim();

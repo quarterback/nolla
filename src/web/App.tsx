@@ -33,7 +33,9 @@ export function App() {
   const [problem, setProblem] = useState<string | null>(null);
   const [live, setLive] = useState<{ label: string; fixed: number; sentences: string[]; words: number }>({ label: '', fixed: 0, sentences: [], words: 0 });
 
-  useEffect(() => save(store), [store]);
+  useEffect(() => {
+    save(store);
+  }, [store]);
   useEffect(() => {
     if (store.theme) document.documentElement.setAttribute('data-theme', store.theme);
     else document.documentElement.removeAttribute('data-theme');
