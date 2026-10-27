@@ -56,6 +56,8 @@ h1, h2, p, dl, dd { margin: 0; }
 .top { display: flex; justify-content: space-between; align-items: baseline; padding: 18px 0 0; }
 .name { font-family: var(--display); font-weight: 900; font-size: 16px; }
 .balance { font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; }
+.top-right { display: flex; align-items: baseline; gap: 18px; }
+.mode { font-family: var(--mono); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; min-height: 44px; padding: 0 2px; }
 main { flex: 1; padding: 24px 0 40px; }
 .problem { margin-top: 12px; font-weight: 700; font-size: 16px; }
 

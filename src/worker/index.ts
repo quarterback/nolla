@@ -5,11 +5,11 @@ import type { AppBindings, Env } from './env';
 import { modelConfigured, scripted } from './env';
 import { requireAccess } from './access';
 import { completeJson, streamChat, streamJson } from './model';
-import { answerPrompt, managerPrompt, sortPrompt } from './prompts';
-import { scriptedAnswer, scriptedManager, scriptedSort } from './script';
+import { answerPrompt, managerPrompt, replyPrompt, sortPrompt } from './prompts';
+import { scriptedAnswer, scriptedManager, scriptedReply, scriptedSort } from './script';
 import { fail } from './util';
 import { options, price } from '../shared/desk';
-import { Answer, ANSWER_JSON_SCHEMA, AnswerBody, ChatBody, ManagerBody, ManagerChecks, MANAGER_JSON_SCHEMA, SORT_JSON_SCHEMA, SortBody, SortResult } from '../shared/desk-schemas';
+import { Answer, ANSWER_JSON_SCHEMA, AnswerBody, ChatBody, ReplyBody, ManagerBody, ManagerChecks, MANAGER_JSON_SCHEMA, SORT_JSON_SCHEMA, SortBody, SortResult } from '../shared/desk-schemas';
 
 const HOME = '0000th.ai';
 
@@ -58,10 +58,10 @@ api.get('/health', async (c) => {
 api.post('/sort', async (c) => {
   const body = SortBody.safeParse(await c.req.json().catch(() => null));
   if (!body.success) fail(400, 'Bad request.');
-  const { text, earlierTurns } = body.data;
+  const { text, earlierTurns, reply } = body.data;
   const sort = await completeJson(
     c.env,
-    [{ role: 'system', content: sortPrompt() }, { role: 'user', content: text }],
+    [{ role: 'system', content: sortPrompt() }, { role: 'user', content: reply ? `The call: ${text}\n\nThe reply: ${reply}` : text }],
     SORT_JSON_SCHEMA,
     SortResult,
     () => scriptedSort(text),
@@ -109,13 +109,13 @@ api.post('/answer', async (c) => {
 api.post('/manager', async (c) => {
   const body = ManagerBody.safeParse(await c.req.json().catch(() => null));
   if (!body.success) fail(400, 'Bad request.');
-  const { text, answer, parts, claim } = body.data;
+  const { text, answer, reply, parts, claim } = body.data;
   const option = describe(parts).label;
   const checks = await completeJson(
     c.env,
     [
       { role: 'system', content: managerPrompt() },
-      { role: 'user', content: `The call: ${text}\n\nThe option paid for: ${option}\n\nThe person's claim: ${claim}\n\nThe reply, as JSON:\n${JSON.stringify(answer)}` },
+      { role: 'user', content: `The call: ${text}\n\nThe option paid for: ${option}\n\nThe person's claim: ${claim}\n\nThe reply:\n${answer ? JSON.stringify(answer) : reply ?? ''}` },
     ],
     MANAGER_JSON_SCHEMA,
     ManagerChecks,
@@ -131,6 +131,33 @@ function describe(parts: { slips: number; sources: number; words: number; check:
   const does = [parts.slips ? 'a slip' : '', parts.sources ? `${parts.sources} sources` : '', parts.words ? `about ${parts.words} words` : '', parts.check ? 'a check' : ''].filter(Boolean).join(', ');
   return { label: 'Custom', does: `sort, ${does}` };
 }
+
+/** The answer first: the model writes in its own words, streamed, before the
+ * desk sorts it or prices it. */
+api.post('/reply', async (c) => {
+  const body = ReplyBody.safeParse(await c.req.json().catch(() => null));
+  if (!body.success) fail(400, 'Bad request.');
+  const { text, words, referral } = body.data;
+  return streamSSE(c, async (s) => {
+    try {
+      if (scripted(c.env)) {
+        const raw = scriptedReply(text, words);
+        for (let i = 0; i < raw.length; i += 24) {
+          await s.writeSSE({ event: 'delta', data: JSON.stringify(raw.slice(i, i + 24)) });
+          await new Promise((r) => setTimeout(r, 12));
+        }
+      } else {
+        const messages = [{ role: 'system' as const, content: replyPrompt(words, !!referral) }, { role: 'user' as const, content: text }];
+        for await (const ev of streamChat(c.env, messages, { reasoning: false })) {
+          if (ev.type === 'delta' && ev.content) await s.writeSSE({ event: 'delta', data: JSON.stringify(ev.content) });
+        }
+      }
+      await s.writeSSE({ event: 'done', data: '{}' });
+    } catch (err) {
+      await s.writeSSE({ event: 'error', data: JSON.stringify(err instanceof HTTPException ? err.message : 'The model did not answer.') });
+    }
+  });
+});
 
 /** Plain chat: the model's own text, streamed, with nothing charged. */
 api.post('/chat', async (c) => {

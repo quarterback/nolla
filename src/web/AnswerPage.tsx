@@ -1,3 +1,4 @@
+import type { Answer } from '../shared/desk-schemas';
 import { fmt, tkn, type Call } from './store';
 import { MachineLine } from './Classification';
 
@@ -13,9 +14,13 @@ interface Props {
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
+const EMPTY: Answer = { short: '', known: [], changes_if: [], desks: [], ask_someone: '', question_back: null, sources: [] };
+
 export function AnswerPage({ call, balance, busy, onPick, onRefund, onRedo, onNew }: Props) {
-  const a = call.answer;
   const bill = call.charged;
+  // The model's own words: the first paragraph leads, the rest follow.
+  const paragraphs = (call.reply ?? '').split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  const a = call.answer ?? (call.reply ? { ...EMPTY, short: paragraphs[0] ?? '', known: paragraphs.slice(1).map((text) => ({ text, source: 0 })) } : null);
   if (!a || !bill) return null;
   const refundedLabels = new Set(call.refunds.flatMap((r) => r.lines.map((l) => l.label)));
   const refunded = call.refunds.reduce((n, r) => n + r.amount, 0);

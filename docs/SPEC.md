@@ -9,8 +9,8 @@ The owner wants screenshots that tell a story, a login to give a few people, and
 ## The desk
 
 1. **Ask.** The person types the call and picks an option from the price menu: route only, quick answer, answer with sources, look into it. Prices come from the schedule in `src/shared/desk.ts`: sort 40, slip 60, source 120, 1 per word, check 80, plus 10% per earlier turn. The ask button carries the price.
-2. **Sort.** The model decides whether the call is answered at the desk, routed, or both, and files it on a path. Sorting costs 40 tkn and is always charged.
-3. **Generate.** The answer streams in the desk's order: the short answer, what is known with numbered sources, this answer changes if, who handles this, one question back, sources. A meter runs as the words arrive and the balance ticks down. The receipt uses the real word count, capped at the posted price.
+2. **Answer.** The model writes in its own words, streamed, with no schema and no sort ahead of it. The first paragraph leads and the rest follow. A meter runs as the words arrive.
+3. **The desk runs after.** When the answer is finished, the desk sorts it and files it on a path, counts its words, and posts the receipt: sort 40 tkn plus the words written, capped at the posted price. The balance ticks down.
 4. **Refund at the counter.** The person picks one reason. The counter refunds the line items that reason covers, up to 300 tkn per refund and 1,000 tkn a week, and flags the answer. Larger claims go to the manager.
 5. **Ask for a manager.** Three questions, one at a time. A separate model call checks what can be checked. The decision is arithmetic on the posted price: approved, partly approved, or denied with a free redo. A decision receipt stays with the call.
 6. **Register.** The weekly balance, 5,000 tkn refilled on Monday, every call with its price, refunds and receipts, and the choice of light or dark.

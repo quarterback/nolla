@@ -122,3 +122,48 @@ describe('the desk and the chat', () => {
     expect(await res.text()).toBe('page');
   });
 });
+
+describe('the answer first', () => {
+  const scriptedEnv = { ...env, DEV_MODE: '1' };
+  const modelEnv = { ...env, MODEL_NAME: 'm', DEV_MODE: '1', SCRIPTED: '0', MODAL_BASE_URL: 'https://model.test', MODAL_TOKEN: 'wk-a.ws-b' };
+  const realFetch = globalThis.fetch;
+  const post = (path: string, body: unknown, e: typeof env) => app.request(`https://0000th.ai${path}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }, e);
+
+  test('the reply streams plain text before any sort', async () => {
+    const res = await post('/api/reply', { text: 'My toilet keeps running. How do I fix it?', words: 100 }, scriptedEnv);
+    const text = await res.text();
+    expect(text).toContain('event: delta');
+    expect(text).toContain('event: done');
+    expect(text).not.toContain('"sort"');
+  });
+
+  test('the reply is the model text with reasoning switched off', async () => {
+    const seen: unknown[] = [];
+    globalThis.fetch = (async (_url: string, init?: RequestInit) => {
+      seen.push(JSON.parse(String(init?.body ?? '{}')));
+      return new Response('data: {"choices":[{"delta":{"content":"Check the flapper."}}]}\n\ndata: [DONE]\n\n');
+    }) as typeof fetch;
+    const res = await post('/api/reply', { text: 'My toilet keeps running. How do I fix it?', words: 100 }, modelEnv);
+    const text = await res.text();
+    globalThis.fetch = realFetch;
+    expect(text).toContain('Check the flapper.');
+    const body = seen[0] as { chat_template_kwargs?: { enable_thinking: boolean }; response_format?: unknown };
+    expect(body.chat_template_kwargs?.enable_thinking).toBe(false);
+    expect(body.response_format).toBeUndefined();
+  });
+
+  test('the sort reads the finished reply', async () => {
+    const seen: string[] = [];
+    const sorted = JSON.stringify({ sort: 'both', category: 'Housing', place: '', code: 'HSG 4.1', path: ['Housing', 'Renting'] });
+    globalThis.fetch = (async (url: string, init?: RequestInit) => {
+      if (String(url).endsWith('/v1/models')) return new Response('{"data":[{"id":"m"}]}');
+      const messages = (JSON.parse(String(init?.body)) as { messages: { content: string }[] }).messages;
+      seen.push(messages[messages.length - 1].content);
+      return new Response(JSON.stringify({ choices: [{ message: { content: sorted } }] }));
+    }) as typeof fetch;
+    const res = await post('/api/sort', { text: 'My landlord kept my deposit.', earlierTurns: 0, reply: 'Oregon law bars deductions for wear.' }, { ...modelEnv, MODEL_NAME: '' });
+    globalThis.fetch = realFetch;
+    expect(res.status).toBe(200);
+    expect(seen[0]).toContain('The reply: Oregon law bars deductions for wear.');
+  });
+});

@@ -53,28 +53,50 @@ export function App() {
     setStore((s) => ({ ...s, ...more, calls: s.calls.map((c) => (c.id === id ? { ...c, ...patch } : c)) }));
   const current = (id: string) => store.calls.find((c) => c.id === id);
 
-  /** Ask: sort the call, then run the chosen option as a stream. */
+  /** The answer comes first, in the model's own words. The desk runs after:
+   * it sorts the finished answer, counts its words and posts the bill. */
+  const generate = async (call: Call, parts: Parts, label: string, free: boolean) => {
+    const fixed = SCHEDULE.sort;
+    setLive({ label, fixed, sentences: [], words: 0 });
+    setView({ name: 'generating', id: call.id });
+    const reply = await api.replyStream(call.text, parts.words || 60, parts.words === 0, (text) => {
+      setLive({ label, fixed, sentences: text.split(/\n\s*\n/).filter(Boolean), words: wordCount(text) });
+    });
+    let sort = call.sort;
+    try {
+      sort = (await api.sort(call.text, 0, reply)).sort;
+    } catch {
+      // The answer stands; the call stays unsorted.
+    }
+    const words = wordCount(reply);
+    const bill = price({ slips: 0, sources: 0, words, check: false }, 0);
+    const quote = call.quote ?? bill;
+    const charged = free ? (call.charged ?? bill) : bill.total > quote.total ? quote : bill;
+    update(call.id, { sort, reply, words, charged, answer: undefined, redo: false, flagged: free ? false : call.flagged, receipt: free ? undefined : call.receipt, pick: undefined }, free ? {} : { balance: store.balance - charged.total });
+    setView({ name: 'answer', id: call.id });
+  };
+
   const ask = async (text: string, parts: Parts, label: string) => {
     setBusy(true);
     setProblem(null);
-    let call: Call | null = null;
+    const call: Call = {
+      id: crypto.randomUUID(),
+      n: store.calls.length + 1,
+      text,
+      at: new Date().toISOString(),
+      sort: { sort: 'both', category: '', place: '', code: '', path: [] },
+      parts,
+      quote: price(parts, 0),
+      refunds: [],
+      flagged: false,
+      redo: false,
+    };
+    setStore((s) => ({ ...s, calls: [...s.calls, call] }));
     try {
-      const { sort } = await api.sort(text, 0);
-      const quote = price(parts, 0);
-      call = { id: crypto.randomUUID(), n: store.calls.length + 1, text, at: new Date().toISOString(), sort, parts, quote, refunds: [], flagged: false, redo: false };
-      const fixed = quote.total - parts.words * SCHEDULE.word;
-      setStore((s) => ({ ...s, balance: s.balance - SCHEDULE.sort, calls: [...s.calls, call!] }));
-      setLive({ label, fixed, sentences: [], words: 0 });
-      setView({ name: 'generating', id: call.id });
-      const { answer, words, charged } = await api.answerStream(text, sort, parts, 0, (raw) => {
-        const sentences = sentencesSoFar(raw);
-        setLive({ label, fixed, sentences, words: wordCount(sentences.join(' ')) });
-      });
-      const capped = charged.total > quote.total ? quote : charged;
-      update(call.id, { charged: capped, answer, words }, { balance: store.balance - capped.total });
-      setView({ name: 'answer', id: call.id });
+      await generate(call, parts, label, false);
     } catch (e) {
       setProblem((e as Error).message);
+      setStore((s) => ({ ...s, calls: s.calls.filter((c) => c.id !== call.id) }));
       setView({ name: 'call' });
     } finally {
       setBusy(false);
@@ -86,9 +108,12 @@ export function App() {
     if (!call.parts) return;
     setBusy(true);
     try {
-      const { answer, words } = await api.answer(call.text, call.sort, call.parts, 0);
-      update(call.id, { answer, words, redo: false, flagged: false, receipt: undefined, pick: undefined });
-      setView({ name: 'answer', id: call.id });
+      if (call.reply) await generate(call, call.parts, 'Redo', true);
+      else {
+        const { answer, words } = await api.answer(call.text, call.sort, call.parts, 0);
+        update(call.id, { answer, words, redo: false, flagged: false, receipt: undefined, pick: undefined });
+        setView({ name: 'answer', id: call.id });
+      }
     } catch (e) {
       setProblem((e as Error).message);
     } finally {
@@ -107,11 +132,11 @@ export function App() {
   };
 
   const manager = async (call: Call, claim: Claim, cost: CostToYou, want: Want) => {
-    if (!call.charged || !call.quote || !call.answer || !call.parts) return;
+    if (!call.charged || !call.quote || (!call.answer && !call.reply) || !call.parts) return;
     setBusy(true);
     setProblem(null);
     try {
-      const { checks } = await api.manager(call.text, call.answer, call.parts, claim);
+      const { checks } = await api.manager(call.text, { answer: call.answer, reply: call.reply }, call.parts, claim);
       const over = Math.max(0, call.charged.total - call.quote.total);
       const full = { ...checks, priceMatched: over === 0 };
       const decision = managerDecision(full, call.charged, over, want);
@@ -133,6 +158,8 @@ export function App() {
   };
 
   const c = 'id' in view ? current(view.id) : undefined;
+  // The look in force: the person's choice, else the system's.
+  const mode = store.theme ?? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
   const openTour = (state: TourState) => {
     setTour(tourState(state));
     setView({ name: 'tour', state });
@@ -145,11 +172,16 @@ export function App() {
         <button className="name" onClick={() => setView({ name: 'front' })}>
           nolla
         </button>
-        {view.name !== 'chat' && (
-          <button className="balance" onClick={() => setView({ name: 'register' })}>
-            {view.name === 'tour' ? tkn(TOUR_BALANCE) : tkn(store.balance)}
+        <div className="top-right">
+          <button className="mode" onClick={() => setStore((s) => ({ ...s, theme: mode === 'dark' ? 'light' : 'dark' }))}>
+            {mode === 'dark' ? 'Light' : 'Dark'}
           </button>
-        )}
+          {view.name !== 'chat' && (
+            <button className="balance" onClick={() => setView({ name: 'register' })}>
+              {view.name === 'tour' ? tkn(TOUR_BALANCE) : tkn(store.balance)}
+            </button>
+          )}
+        </div>
       </header>
       <main>
         {view.name === 'chat' && <Chat />}

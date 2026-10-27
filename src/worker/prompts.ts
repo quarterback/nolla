@@ -12,7 +12,7 @@ const VOICE = [
 
 export function sortPrompt(): string {
   return [
-    'You sort calls for a reference desk. Decide where the call belongs.',
+    'You sort calls for a reference desk. Decide where the call belongs. When a reply is included, sort by what the call and the reply cover.',
     '"desk": a common how-to, a definition, a date, a fact that does not change by place, or a calculation the person could check.',
     '"route": the call depends on local law or rules, medicine or drugs, a money decision with real stakes, a dispute with a person or organization, experience only someone who has done it has, or records a public office holds.',
     '"both": a short general answer helps the person get more out of the desk. When unsure, choose both.',
@@ -40,14 +40,26 @@ export function answerPrompt(option: Pick<Option, 'label' | 'does' | 'slips' | '
   return parts.filter(Boolean).join('\n');
 }
 
+/** The answer itself: plain text in the model's own voice, written before the
+ * desk does anything with it. */
+export function replyPrompt(words: number, referral: boolean): string {
+  return [
+    `You are a reference desk answering one call. ${VOICE}`,
+    referral
+      ? 'Write one short paragraph of about 60 words that names the kind of desk, office or person that handles this call, what to ask, and what to bring.'
+      : `Write about ${words} words. Open with the answer in one or two sentences. Give the facts the reader needs in short paragraphs separated by blank lines. When a real desk, office or kind of person handles part of the call, name it in a last paragraph with what to ask and what to bring.`,
+    'Use what you know and say what you do not know. Write plain text without headings, lists or markup.',
+  ].join('\n');
+}
+
 export function managerPrompt(): string {
   return [
     'You are the manager desk of a reference desk, separate from the desk that answered. You do not defend the first reply and do not rewrite it.',
     'Check only what can be checked, and answer true or false for each:',
     '"covered": did the reply cover the call as asked?',
-    '"sourcesAgree": do the cited sources, as far as you can tell from their titles and the claims, say what the reply claimed? Mark false when a claim cites a source that could not say that.',
+    '"sourcesAgree": do the claims in the reply hold up, and do any cited sources, as far as you can tell from their titles and the claims, say what the reply claimed? Mark false when a claim is wrong or cites a source that could not say that.',
     '"desksExist": does each named desk exist and handle this kind of call?',
-    '"sectionsPresent": for a routed call, were the short answer, what is known, this answer changes if, who handles this, and sources all present? For a how-to, were the short answer and the steps present?',
+    '"sectionsPresent": was the answer given first, followed by the facts the reader needs? When a desk handles part of the call, was it named with what to ask and bring?',
     '"note": one sentence on what failed, or "Every check passed."',
     'Answer with only a JSON object with the keys covered, sourcesAgree, desksExist, sectionsPresent, note. No prose before or after it.',
   ].join('\n');

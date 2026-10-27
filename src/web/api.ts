@@ -15,9 +15,40 @@ export const api = {
     const res = await fetch('/api/health');
     return (await res.json()) as { model: 'scripted' | 'off' | 'ready' | 'starting' | 'rejected' };
   },
-  sort: (text: string, earlierTurns: number) => post<{ sort: SortResult; quotes: Quote[] }>('/sort', { text, earlierTurns }),
+  sort: (text: string, earlierTurns: number, reply?: string) => post<{ sort: SortResult; quotes: Quote[] }>('/sort', { text, earlierTurns, reply }),
   answer: (text: string, sort: SortResult, parts: Parts, earlierTurns: number) =>
     post<{ answer: Answer; words: number; charged: Price }>('/answer', { text, sort, parts, earlierTurns }),
+
+  /** The model's own words, streamed. onText gets the whole text so far. */
+  async replyStream(text: string, words: number, referral: boolean, onText: (text: string) => void): Promise<string> {
+    const res = await fetch('/api/reply', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text, words, referral }) });
+    if (!res.ok || !res.body) throw new Error(((await res.json().catch(() => ({}))) as { error?: string }).error ?? 'The desk did not answer.');
+    const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
+    let buffer = '';
+    let raw = '';
+    let finished = false;
+    const clean = (s: string) => s.replace(/<think>[\s\S]*?(<\/think>|$)/g, '').trimStart();
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += value;
+      const frames = buffer.split('\n\n');
+      buffer = frames.pop() ?? '';
+      for (const frame of frames) {
+        const event = /^event: (.*)$/m.exec(frame)?.[1];
+        const data = frame.split('\n').filter((l) => l.startsWith('data:')).map((l) => l.slice(5).trimStart()).join('\n');
+        if (!event || !data) continue;
+        if (event === 'delta') {
+          raw += JSON.parse(data) as string;
+          onText(clean(raw));
+        } else if (event === 'done') finished = true;
+        else if (event === 'error') throw new Error(JSON.parse(data) as string);
+      }
+    }
+    const text2 = clean(raw).trim();
+    if (!finished || !text2) throw new Error('The desk did not answer.');
+    return text2;
+  },
 
   /** The same call as a stream. onRaw gets the JSON text as it arrives. */
   async answerStream(text: string, sort: SortResult, parts: Parts, earlierTurns: number, onRaw: (raw: string) => void): Promise<{ answer: Answer; words: number; charged: Price }> {
@@ -51,5 +82,5 @@ export const api = {
     if (!done) throw new Error('The desk did not answer.');
     return done;
   },
-  manager: (text: string, answer: Answer, parts: Parts, claim: string) => post<{ checks: ManagerChecks }>('/manager', { text, answer, parts, claim }),
+  manager: (text: string, said: { answer?: Answer; reply?: string }, parts: Parts, claim: string) => post<{ checks: ManagerChecks }>('/manager', { text, ...said, parts, claim }),
 };

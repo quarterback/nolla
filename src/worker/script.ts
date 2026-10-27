@@ -148,3 +148,12 @@ export function scriptedManager(claim: string): ManagerChecks {
       return { ...pass, note: 'Every check passed.' };
   }
 }
+
+/** The scripted answer as plain paragraphs, for dev without a model. */
+export function scriptedReply(text: string, words: number): string {
+  const a = scriptedAnswer(text, { slips: 1, sources: 0, words: Math.max(words, 100), check: false });
+  const paragraphs = [a.short, ...a.known.map((k) => k.text)];
+  const d = a.desks[0];
+  if (d) paragraphs.push(`${d.name}. ${d.what.replace(/\.$/, '')}. Ask: ${d.ask.replace(/[.?]$/, '')}? Bring ${d.bring.charAt(0).toLowerCase()}${d.bring.slice(1).replace(/\.$/, '')}.`);
+  return paragraphs.filter(Boolean).join('\n\n');
+}
