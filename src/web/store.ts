@@ -34,6 +34,8 @@ export interface Call {
   quote?: Price;
   charged?: Price;
   answer?: Answer;
+  /** The model's own words, when the answer came first and the desk ran after. */
+  reply?: string;
   words?: number;
   refunds: Refund[];
   receipt?: Receipt;

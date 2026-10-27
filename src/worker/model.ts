@@ -176,16 +176,24 @@ export type ChatEvent =
 
 /** Plain chat: the model's own text with no schema and no change to how it
  * reasons. Yields content and reasoning as they arrive, then token counts. */
-export async function* streamChat(env: Env, messages: ChatMessage[]): AsyncGenerator<ChatEvent> {
+export async function* streamChat(env: Env, messages: ChatMessage[], opts: { reasoning?: boolean } = {}): AsyncGenerator<ChatEvent> {
   if (!modelConfigured(env)) fail(503, 'The model is not connected.');
   const model = await modelName(env);
   yield { type: 'meta', model };
   let res: Response | null = null;
-  for (const withUsage of [true, false]) {
+  // Request shapes, fullest first. A 400 or 422 moves to the next.
+  const shapes = opts.reasoning === false ? [[true, true], [true, false], [false, false]] : [[true, false], [false, false]];
+  for (const [usage, quiet] of shapes) {
     res = await fetch(`${env.MODAL_BASE_URL}/v1/chat/completions`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', authorization: `Bearer ${env.MODAL_TOKEN}` },
-      body: JSON.stringify({ model, messages, stream: true, ...(withUsage ? { stream_options: { include_usage: true } } : {}) }),
+      body: JSON.stringify({
+        model,
+        messages,
+        stream: true,
+        ...(usage ? { stream_options: { include_usage: true } } : {}),
+        ...(quiet ? { chat_template_kwargs: { enable_thinking: false } } : {}),
+      }),
     });
     if (res.status !== 400 && res.status !== 422) break;
   }

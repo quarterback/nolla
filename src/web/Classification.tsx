@@ -18,7 +18,8 @@ export function Classification({ call }: { call: Call }) {
 export function MachineLine({ call, extra }: { call: Call; extra?: string }) {
   return (
     <p className="machine">
-      call {callNumber(call.n)} · {call.sort.path.join(', ')}
+      call {callNumber(call.n)}
+      {call.sort.path.length ? ` · ${call.sort.path.join(', ')}` : ''}
       {extra ? ` · ${extra}` : ''}
     </p>
   );
