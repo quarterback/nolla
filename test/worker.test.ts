@@ -39,3 +39,47 @@ describe('worker', () => {
     expect(res.status).toBe(400);
   });
 });
+
+describe('the model', () => {
+  const modelEnv = { ...env, MODEL_NAME: '', DEV_MODE: '0', SCRIPTED: '0', MODAL_BASE_URL: 'https://model.test', MODAL_TOKEN: 'wk-a.ws-b' };
+  const sortBody = JSON.stringify({ text: 'My toilet keeps running. How do I fix it?', earlierTurns: 0 });
+  const post = () => app.request('https://0000th.ai/api/sort', { method: 'POST', headers: { 'content-type': 'application/json', 'cf-access-jwt-assertion': 'x' }, body: sortBody }, { ...modelEnv, DEV_MODE: '1' });
+  const reply = (content: string) => new Response(JSON.stringify({ choices: [{ message: { content } }] }), { status: 200 });
+  const sorted = JSON.stringify({ sort: 'desk', category: 'Home repair', place: '', code: 'HOM 2.3', path: ['Home repair', 'Plumbing'] });
+  const realFetch = globalThis.fetch;
+  const stub = (fn: (url: string, init?: RequestInit) => Response) => {
+    globalThis.fetch = (async (url: string, init?: RequestInit) => fn(String(url), init)) as typeof fetch;
+  };
+  const restore = () => {
+    globalThis.fetch = realFetch;
+  };
+
+  test('a rejected token is reported as a rejected token', async () => {
+    stub(() => new Response('{"error":"proxy auth required"}', { status: 401 }));
+    const res = await post();
+    restore();
+    expect(res.status).toBe(502);
+    expect(await res.json()).toEqual({ error: 'The model rejected the token.' });
+  });
+
+  test('a model list that fails for another reason does not block the call', async () => {
+    const seen: string[] = [];
+    stub((url, init) => {
+      if (url.endsWith('/v1/models')) return new Response('missing', { status: 404 });
+      seen.push((JSON.parse(String(init?.body)) as { model: string }).model);
+      return reply(sorted);
+    });
+    const res = await post();
+    restore();
+    expect(res.status).toBe(200);
+    expect(seen[0]).toBe('0000th');
+  });
+
+  test('an answer wrapped in a reasoning block is read', async () => {
+    stub((url) => (url.endsWith('/v1/models') ? new Response('{"data":[{"id":"m"}]}') : reply(`<think>hmm</think>\n${sorted}`)));
+    const res = await post();
+    restore();
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as { sort: { sort: string } }).sort.sort).toBe('desk');
+  });
+});

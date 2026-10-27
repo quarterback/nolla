@@ -14,7 +14,7 @@ The owner wants screenshots that tell a story, a login to give a few people, and
 4. **Refund at the counter.** The person picks one reason. The counter refunds the line items that reason covers, up to 300 tkn per refund and 1,000 tkn a week, and flags the answer. Larger claims go to the manager.
 5. **Ask for a manager.** Three questions, one at a time. A separate model call checks what can be checked. The decision is arithmetic on the posted price: approved, partly approved, or denied with a free redo. A decision receipt stays with the call.
 6. **Register.** The weekly balance, 5,000 tkn refilled on Monday, every call with its price, refunds and receipts, and the choice of light or dark.
-7. **Front page and tour.** The first screen says what the desk is and opens a tour: every state of the desk from one fixed call, built in the browser from the scripted answers, without touching the balance.
+7. **Front page and tour.** The first screen holds the name, the way in, and a collapsed tour: every state of the desk from one fixed call, built in the browser from the scripted answers, without touching the balance.
 
 The house rate is 1,000 tkn to $0.25. Footprint figures (energy, water, carbon per token) are the ones the canvas uses.
 

@@ -13,7 +13,7 @@ export type Quote = Option & { price: Price };
 export const api = {
   health: async () => {
     const res = await fetch('/api/health');
-    return (await res.json()) as { model: 'scripted' | 'off' | 'ready' | 'starting' };
+    return (await res.json()) as { model: 'scripted' | 'off' | 'ready' | 'starting' | 'rejected' };
   },
   sort: (text: string, earlierTurns: number) => post<{ sort: SortResult; quotes: Quote[] }>('/sort', { text, earlierTurns }),
   answer: (text: string, sort: SortResult, parts: Parts, earlierTurns: number) =>

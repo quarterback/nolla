@@ -45,8 +45,9 @@ api.get('/health', async (c) => {
       headers: { authorization: `Bearer ${c.env.MODAL_TOKEN}` },
       signal: AbortSignal.timeout(8000),
     });
-    const body = res.ok ? ((await res.json()) as { data?: { id: string }[] }) : null;
-    return c.json({ model: res.ok ? 'ready' : 'starting', name: body?.data?.[0]?.id ?? '' });
+    const body = res.ok ? ((await res.json().catch(() => ({}))) as { data?: { id: string }[] }) : null;
+    const state = res.ok ? 'ready' : res.status === 401 || res.status === 403 ? 'rejected' : 'starting';
+    return c.json({ model: state, status: res.status, name: body?.data?.[0]?.id ?? '' });
   } catch {
     return c.json({ model: 'starting' });
   }

@@ -1,9 +1,10 @@
 # Deploys the Worker to Cloudflare on every push to main.
 # Needs two repository secrets: CLOUDFLARE_API_TOKEN (a token with Workers
 # Scripts: Edit and Zone: Read on the zones) and CLOUDFLARE_ACCOUNT_ID.
-# A third, MODAL_TOKEN, connects the model: when it is set, the deploy copies
-# it into the Worker, which takes the endpoint URL from wrangler.toml, and the
-# desk stops answering from the script.
+# The model connects through the Modal proxy token, wk-<id>.ws-<secret>. Set
+# it as MODAL_TOKEN, or set MODAL_TOKEN_ID (wk-) and MODAL_TOKEN_SECRET (ws-).
+# The deploy copies it into the Worker, which takes the endpoint URL from
+# wrangler.toml, and the desk stops answering from the script.
 name: Deploy
 
 on:
@@ -31,10 +32,21 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           MODAL_TOKEN: ${{ secrets.MODAL_TOKEN }}
+          MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+          MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
         run: |
-          if [ -n "$MODAL_TOKEN" ]; then
-            printf '%s' "$MODAL_TOKEN" | npx wrangler secret put MODAL_TOKEN
+          token=""
+          if [[ "$MODAL_TOKEN" =~ ^wk-.+\.ws-.+$ ]]; then
+            token="$MODAL_TOKEN"
+          elif [[ "$MODAL_TOKEN_ID" == wk-* && "$MODAL_TOKEN_SECRET" == ws-* ]]; then
+            token="$MODAL_TOKEN_ID.$MODAL_TOKEN_SECRET"
+          fi
+          if [ -n "$token" ]; then
+            printf '%s' "$token" | npx wrangler secret put MODAL_TOKEN
             echo "model connected"
+          elif [ -n "$MODAL_TOKEN$MODAL_TOKEN_ID$MODAL_TOKEN_SECRET" ]; then
+            echo "::error::The Modal proxy token reads wk-<id>.ws-<secret>. Set MODAL_TOKEN to that, or set MODAL_TOKEN_ID to the wk- id and MODAL_TOKEN_SECRET to the ws- secret."
+            exit 1
           else
             echo "no model token; the desk answers from the script"
           fi
