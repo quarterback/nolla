@@ -5,7 +5,42 @@ interface Turn {
   content: string;
   reasoning: string;
   /** Timing and token counts, once the reply is done. */
-  stats?: string;
+  stats?: Stats;
+}
+
+interface Stats {
+  /** Milliseconds from send to the first token. */
+  first: number;
+  /** Milliseconds from send to the last token. */
+  total: number;
+  /** Tokens the model wrote, when the endpoint reports them. */
+  completion: number;
+}
+
+const words = (s: string) => (s.trim() ? s.trim().split(/\s+/).length : 0);
+const n = (x: number) => x.toLocaleString('en-US');
+
+/** The meter under a reply: words while it writes, timing once it is done. */
+function Meter({ turn, writing }: { turn: Turn; writing: boolean }) {
+  if (writing) {
+    return (
+      <div className="chat-meter">
+        <span>writing · {n(words(turn.content))} words</span>
+      </div>
+    );
+  }
+  if (!turn.stats) return null;
+  const { first, total, completion } = turn.stats;
+  const streaming = (total - first) / 1000;
+  const right = [`${(total / 1000).toFixed(1)} s`];
+  if (completion) right.unshift(`${n(completion)} tokens`);
+  if (completion && streaming >= 0.25) right.push(`${n(Math.round(completion / streaming))} tokens/s`);
+  return (
+    <div className="chat-meter">
+      <span>first token {n(Math.round(first))} ms</span>
+      <span>{right.join(' · ')}</span>
+    </div>
+  );
 }
 
 /** The model as it runs: text in, the model's own text out, streamed, with
@@ -60,9 +95,7 @@ export function Chat() {
         }
       }
       const total = performance.now() - t0;
-      const parts = [`${Math.round(first)} ms to first token`, `${(total / 1000).toFixed(1)} s`];
-      if (completion) parts.push(`${completion} tokens`, `${(completion / Math.max(0.001, (total - first) / 1000)).toFixed(1)} tokens/s`);
-      patch((t) => ({ ...t, stats: parts.join(' · ') }));
+      patch((t) => ({ ...t, stats: { first, total, completion } }));
     } catch (e) {
       setProblem((e as Error).message);
       setTurns((all) => (all.length && !all[all.length - 1].content && !all[all.length - 1].reasoning ? all.slice(0, -1) : all));
@@ -71,40 +104,72 @@ export function Chat() {
     }
   };
 
+  const empty = turns.length === 0;
+  const lines = draft.split('\n').length;
+
   return (
-    <section className="chat">
+    <section className={`chat${empty ? ' chat--empty' : ''}`}>
       <div className="chat-top">
-        <span className="machine">{model || 'model'}</span>
-        <button className="quiet" onClick={() => { setTurns([]); setProblem(null); }} disabled={busy || !turns.length}>
-          Clear
-        </button>
+        <span className="chat-model">{model}</span>
+        {!empty && (
+          <button className="quiet" onClick={() => { setTurns([]); setProblem(null); }} disabled={busy}>
+            Clear
+          </button>
+        )}
       </div>
+
       <div className="chat-log">
-        {turns.map((t, i) => (
-          <div key={i} className={`turn ${t.role}`}>
-            <p className="who">{t.role === 'user' ? 'you' : model || 'model'}</p>
-            {t.reasoning && <p className="reasoning">{t.reasoning}</p>}
-            <p className="said">{t.content}{busy && i === turns.length - 1 && t.role === 'assistant' && <span className="cursor small" aria-hidden="true" />}</p>
-            {t.stats && <p className="machine">{t.stats}</p>}
-          </div>
-        ))}
+        {turns.map((t, i) => {
+          const last = i === turns.length - 1;
+          if (t.role === 'user') {
+            return (
+              <h2 key={i} className="chat-q">
+                {t.content}
+              </h2>
+            );
+          }
+          const writing = busy && last;
+          const paragraphs = t.content.split(/\n{2,}/);
+          return (
+            <div key={i} className="chat-a">
+              {t.reasoning && (
+                <details className="chat-reasoning" open={writing && !t.content}>
+                  <summary>reasoning · {n(words(t.reasoning))} words</summary>
+                  <p>{t.reasoning}</p>
+                </details>
+              )}
+              <div className="chat-reply">
+                {paragraphs.map((p, j) => (
+                  <p key={j}>
+                    {p}
+                    {writing && j === paragraphs.length - 1 && <span className="cursor small" aria-hidden="true" />}
+                  </p>
+                ))}
+              </div>
+              <Meter turn={t} writing={writing} />
+            </div>
+          );
+        })}
         <div ref={end} />
       </div>
+
       {problem && <p className="problem">{problem}</p>}
+
       <form
-        className="chat-form"
+        className="composer"
         onSubmit={(e) => {
           e.preventDefault();
           void send();
         }}
       >
-        <label htmlFor="say" className="label">
+        <label htmlFor="say" className="sr-only">
           Message
         </label>
         <textarea
           id="say"
-          rows={2}
+          rows={empty ? 3 : Math.min(6, Math.max(1, lines))}
           value={draft}
+          placeholder="The question, as you would say it"
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -115,7 +180,7 @@ export function Chat() {
           disabled={busy}
           autoFocus
         />
-        <button type="submit" className="primary wide" disabled={busy || !draft.trim()}>
+        <button type="submit" className="send" disabled={busy || !draft.trim()}>
           {busy ? 'Writing' : 'Send'}
         </button>
       </form>
