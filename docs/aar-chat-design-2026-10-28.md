@@ -42,7 +42,7 @@ No change to the request or the worker, so a break here is visual. The risk is t
 - Counter: removed "used this week 120 of 1,000" from the line under the heading, the weekly meter the owner rejected on the boards.
 - Manager decision: removed "counter limit 300 tkn", which repeated the counter screen, and the paragraph that restated the checks and the refund line. The model's own note shows when there is a refund. Removed "the receipt stays with the call" under the buttons.
 
-**Left as is, for the owner:** the decision receipt's Found line repeats the checks list above it, and the Register still lists counter refunds for the week. The receipt is the record of the decision, so cutting from it is his call.
+**Decided by the owner:** the decision receipt's Found line repeated the checks list above it. Ron asked for it cut, so it is gone from the receipt, from the four manager boards on the design canvas, and from the screens on ronbronson.dev. The Register still lists counter refunds for the week.
 
 ## 6. Change: what happens next
 - Ron reviews the screenshots, the new strings, and the receipt question before merge.

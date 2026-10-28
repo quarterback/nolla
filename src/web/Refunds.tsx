@@ -146,8 +146,6 @@ export function Manager({ call, busy, problem, onDecide, onRedo, onBack }: { cal
         <div className="sheet receipt">
           <p className="receipt-title">Decision receipt {r.n} · {title}</p>
           <dl className="slip-lines">
-            <dt>Found</dt>
-            <dd>{cap(d.found)}</dd>
             <dt>Refund</dt>
             <dd>
               {refundLine}
