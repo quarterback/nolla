@@ -33,7 +33,18 @@ None from the request. The chat still has no price, balance, or sort, as its com
 ## 5. Consequence: what it cost or risked
 No change to the request or the worker, so a break here is visual. The risk is the three new strings and the placeholder, which need the owner's approval under EDITORIAL.md.
 
+## Second pass: no eyebrows, no repeats
+**Instruction given (actual wording):** "i don't like any eyebrow text ever, nor repetitive descriptions"
+**What changed:**
+- `/chat`: removed the model name line above the conversation and the reasoning label above each reply. The meter now appears once, under the latest reply, and its left side is a `reasoning` switch that shows the model's reasoning below it. Older replies show the question and the answer alone. Clear moved into the composer beside Send.
+- Ask screen: "The call" label above the question field is now read by screen readers only. The field grows with the question in place of cutting it off at three lines, and focus thickens its rules in place of drawing a second frame around them.
+- Tour: removed the "tour · Ask" line above each tour screen; "Back to the tour" stays.
+- Counter: removed "used this week 120 of 1,000" from the line under the heading, the weekly meter the owner rejected on the boards.
+- Manager decision: removed "counter limit 300 tkn", which repeated the counter screen, and the paragraph that restated the checks and the refund line. The model's own note shows when there is a refund. Removed "the receipt stays with the call" under the buttons.
+
+**Left as is, for the owner:** the decision receipt's Found line repeats the checks list above it, and the Register still lists counter refunds for the week. The receipt is the record of the decision, so cutting from it is his call.
+
 ## 6. Change: what happens next
-- Ron reviews the screenshots and the four strings before merge.
+- Ron reviews the screenshots, the new strings, and the receipt question before merge.
 - If `/chat` is going to stay, add a board for it to the design canvas so the next build works from a spec.
 - Keep rendering against a streaming mock before calling chat work done; the earlier blank page bug only showed with a real stream.

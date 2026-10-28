@@ -27,7 +27,7 @@ export function CallForm({ busy, problem, onAsk, preset }: Props) {
           if (ready) onAsk(text.trim(), { slips: chosen.slips, sources: chosen.sources, words: chosen.words, check: chosen.check }, chosen.label);
         }}
       >
-        <label htmlFor="call" className="label">
+        <label htmlFor="call" className="sr-only">
           The call
         </label>
         <textarea id="call" rows={3} value={text} onChange={(e) => setText(e.target.value)} placeholder="The question, as you would say it" disabled={busy} autoFocus />

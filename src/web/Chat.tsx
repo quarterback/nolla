@@ -20,25 +20,31 @@ interface Stats {
 const words = (s: string) => (s.trim() ? s.trim().split(/\s+/).length : 0);
 const n = (x: number) => x.toLocaleString('en-US');
 
-/** The meter under a reply: words while it writes, timing once it is done. */
-function Meter({ turn, writing }: { turn: Turn; writing: boolean }) {
-  if (writing) {
-    return (
-      <div className="chat-meter">
-        <span>writing · {n(words(turn.content))} words</span>
-      </div>
-    );
+/** The meter under the latest reply: words while it writes, then the
+ * model's timing and a switch for its reasoning. */
+function Meter({ turn, writing, showing, onToggle }: { turn: Turn; writing: boolean; showing: boolean; onToggle: () => void }) {
+  let right = '';
+  if (!writing && turn.stats) {
+    const { first, total, completion } = turn.stats;
+    const streaming = (total - first) / 1000;
+    const parts = [`first token ${n(Math.round(first))} ms`];
+    if (completion) parts.push(`${n(completion)} tokens`);
+    parts.push(`${(total / 1000).toFixed(1)} s`);
+    if (completion && streaming >= 0.25) parts.push(`${n(Math.round(completion / streaming))} tokens/s`);
+    right = parts.join(' · ');
   }
-  if (!turn.stats) return null;
-  const { first, total, completion } = turn.stats;
-  const streaming = (total - first) / 1000;
-  const right = [`${(total / 1000).toFixed(1)} s`];
-  if (completion) right.unshift(`${n(completion)} tokens`);
-  if (completion && streaming >= 0.25) right.push(`${n(Math.round(completion / streaming))} tokens/s`);
   return (
     <div className="chat-meter">
-      <span>first token {n(Math.round(first))} ms</span>
-      <span>{right.join(' · ')}</span>
+      {writing ? (
+        <span>writing · {n(words(turn.content))} words</span>
+      ) : turn.reasoning ? (
+        <button type="button" className="chat-toggle" aria-expanded={showing} onClick={onToggle}>
+          reasoning
+        </button>
+      ) : (
+        <span />
+      )}
+      {right && <span>{right}</span>}
     </div>
   );
 }
@@ -50,7 +56,7 @@ export function Chat() {
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
-  const [model, setModel] = useState('');
+  const [reasoningOpen, setReasoningOpen] = useState(false);
   const end = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -63,6 +69,7 @@ export function Chat() {
     const history = [...turns.map((t) => ({ role: t.role, content: t.content })), { role: 'user' as const, content: text }];
     setTurns((t) => [...t, { role: 'user', content: text, reasoning: '' }, { role: 'assistant', content: '', reasoning: '' }]);
     setDraft('');
+    setReasoningOpen(false);
     setBusy(true);
     setProblem(null);
     const t0 = performance.now();
@@ -85,8 +92,7 @@ export function Chat() {
           const data = frame.split('\n').filter((l) => l.startsWith('data:')).map((l) => l.slice(5).trimStart()).join('\n');
           if (!event || !data) continue;
           const body = JSON.parse(data);
-          if (event === 'meta') setModel((body as { model: string }).model);
-          else if (event === 'delta') {
+          if (event === 'delta') {
             if (!first) first = performance.now() - t0;
             const d = body as { c: string; r: string };
             patch((t) => ({ ...t, content: t.content + d.c, reasoning: t.reasoning + d.r }));
@@ -109,15 +115,6 @@ export function Chat() {
 
   return (
     <section className={`chat${empty ? ' chat--empty' : ''}`}>
-      <div className="chat-top">
-        <span className="chat-model">{model}</span>
-        {!empty && (
-          <button className="quiet" onClick={() => { setTurns([]); setProblem(null); }} disabled={busy}>
-            Clear
-          </button>
-        )}
-      </div>
-
       <div className="chat-log">
         {turns.map((t, i) => {
           const last = i === turns.length - 1;
@@ -130,14 +127,9 @@ export function Chat() {
           }
           const writing = busy && last;
           const paragraphs = t.content.split(/\n{2,}/);
+          const showing = last && (reasoningOpen || (writing && !t.content));
           return (
             <div key={i} className="chat-a">
-              {t.reasoning && (
-                <details className="chat-reasoning" open={writing && !t.content}>
-                  <summary>reasoning · {n(words(t.reasoning))} words</summary>
-                  <p>{t.reasoning}</p>
-                </details>
-              )}
               <div className="chat-reply">
                 {paragraphs.map((p, j) => (
                   <p key={j}>
@@ -146,7 +138,8 @@ export function Chat() {
                   </p>
                 ))}
               </div>
-              <Meter turn={t} writing={writing} />
+              {last && <Meter turn={t} writing={writing} showing={showing} onToggle={() => setReasoningOpen((o) => !o)} />}
+              {showing && t.reasoning && <p className="chat-reasoning">{t.reasoning}</p>}
             </div>
           );
         })}
@@ -180,6 +173,11 @@ export function Chat() {
           disabled={busy}
           autoFocus
         />
+        {!empty && (
+          <button type="button" className="quiet chat-clear" onClick={() => { setTurns([]); setProblem(null); }} disabled={busy}>
+            Clear
+          </button>
+        )}
         <button type="submit" className="send" disabled={busy || !draft.trim()}>
           {busy ? 'Writing' : 'Send'}
         </button>
