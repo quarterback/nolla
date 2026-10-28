@@ -11,7 +11,7 @@ import { Counter, Manager } from './Refunds';
 import { Register } from './Register';
 import { Front } from './Front';
 import { Chat } from './Chat';
-import { TOUR, TOUR_BALANCE, tourGenerating, tourState, type TourState } from './tour';
+import { TOUR_BALANCE, tourGenerating, tourState, type TourState } from './tour';
 
 type View =
   | { name: 'front' }
@@ -166,7 +166,6 @@ export function App() {
     setTour(tourState(state));
     setView({ name: 'tour', state });
   };
-  const tourTitle = view.name === 'tour' ? TOUR.find((t) => t.key === view.state)?.name : '';
 
   return (
     <div className="page">
@@ -191,7 +190,6 @@ export function App() {
         {view.name === 'tour' && tour && (
           <>
             <div className="tourbar">
-              <span>tour · {tourTitle}</span>
               <button onClick={() => setView({ name: 'front' })}>Back to the tour</button>
             </div>
             <TourScreen state={view.state} call={tour} setCall={setTour} />

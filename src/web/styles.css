@@ -79,8 +79,10 @@ main { flex: 1; padding: 24px 0 40px; }
 .path li.last { font-weight: 700; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
 
 /* The call as typed, in pieces. */
-textarea { display: block; width: 100%; margin-top: 8px; padding: 10px 0; border: 0; border-top: 3px solid var(--ink); border-bottom: 3px solid var(--ink); border-radius: 0; background: transparent; color: var(--ink); font: 900 27px/1.12 var(--display); resize: vertical; }
+textarea { display: block; width: 100%; margin-top: 8px; padding: 10px 0; border: 0; border-top: 3px solid var(--ink); border-bottom: 3px solid var(--ink); border-radius: 0; background: transparent; color: var(--ink); font: 900 27px/1.12 var(--display); resize: none; }
 textarea::placeholder { color: var(--dim); }
+textarea { field-sizing: content; min-height: calc(3lh + 26px); }
+textarea:focus-visible { outline: none; border-top-width: 6px; border-bottom-width: 6px; padding: 7px 0; }
 .pieces-wrap { margin-top: 10px; }
 .pieces { display: flex; flex-wrap: wrap; gap: 4px 0; font-family: var(--mono); font-size: 13px; color: var(--dim); }
 .piece { padding: 0 6px; border-right: 1px solid var(--hair); line-height: 1.5; }
@@ -180,7 +182,7 @@ textarea::placeholder { color: var(--dim); }
 .tour button { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 12px; width: 100%; min-height: 48px; text-align: left; padding: 11px 0; align-items: baseline; }
 .tour .t-name { font-weight: 700; font-size: 17px; }
 .tour .t-what { font-size: 15px; color: var(--dim); }
-.tourbar { margin-bottom: 18px; padding-bottom: 10px; border-bottom: 1px solid var(--hair); font-family: var(--mono); font-size: 13px; color: var(--dim); display: flex; justify-content: space-between; gap: 12px; }
+.tourbar { margin-bottom: 18px; padding-bottom: 10px; border-bottom: 1px solid var(--hair); font-family: var(--mono); font-size: 13px; color: var(--dim); display: flex; justify-content: flex-end; gap: 12px; }
 .tourbar button { font-family: var(--mono); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
 
 @media (max-width: 480px) {
@@ -188,13 +190,34 @@ textarea::placeholder { color: var(--dim); }
   .giant { font-size: 56px; }
 }
 
-/* Plain chat at /chat. */
-.chat-top { display: flex; justify-content: space-between; align-items: baseline; }
-.chat-log { margin-top: 12px; }
-.turn { padding: 14px 0; border-top: 1px solid var(--hair); }
-.turn .who { font-family: var(--mono); font-size: 12px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.06em; }
-.turn .said { margin-top: 6px; font-size: 17px; line-height: 1.5; white-space: pre-wrap; }
-.turn .reasoning { margin-top: 6px; font-family: var(--mono); font-size: 13px; line-height: 1.5; color: var(--dim); white-space: pre-wrap; }
-.turn.user .said { font-weight: 700; }
-.chat-form { margin-top: 12px; position: sticky; bottom: 0; background: var(--ground); padding-bottom: 12px; }
-.chat-form textarea { font: 500 17px/1.4 var(--sans); }
+/* Plain chat at /chat: the model as it runs, in the desk's type. The
+   question sets in the display face, the reply in the body face, and the
+   machine's own numbers in mono under each reply. */
+.chat { display: flex; flex-direction: column; min-height: calc(100vh - 110px); }
+.chat-log { flex: 1; }
+.chat--empty .chat-log { flex: 0; }
+.chat-q { margin-top: 28px; padding-top: 18px; border-top: 3px solid var(--ink); font-family: var(--display); font-weight: 900; font-size: 24px; line-height: 1.14; overflow-wrap: anywhere; white-space: pre-wrap; }
+.chat-q:first-child { margin-top: 0; }
+.chat-a { margin-top: 14px; }
+.chat-reply p { margin-top: 12px; font-size: 17px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.chat-reply p:first-child { margin-top: 0; }
+.chat-reasoning { margin-top: 10px; padding-left: 12px; border-left: 2px solid var(--hair); font-family: var(--mono); font-size: 13px; line-height: 1.55; color: var(--dim); white-space: pre-wrap; }
+.chat-toggle { min-height: 32px; font-family: var(--mono); font-size: 13px; color: var(--dim); text-decoration: underline; text-underline-offset: 3px; }
+.chat-toggle[aria-expanded="true"] { color: var(--ink); }
+.chat-meter { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 16px; margin-top: 16px; padding-top: 8px; border-top: 1px solid var(--hair); font-family: var(--mono); font-size: 13px; color: var(--dim); font-variant-numeric: tabular-nums; }
+
+/* The composer: pinned under the conversation, one line that grows. */
+.composer { position: sticky; bottom: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 12px; align-items: end; margin-top: 24px; padding: 12px 0 16px; border-top: 3px solid var(--ink); background: var(--ground); }
+.composer textarea, .composer textarea:focus-visible { margin: 0; min-height: 0; padding: 12px 0; border: 0; font: 500 17px/1.45 var(--sans); resize: none; outline: none; }
+.composer:focus-within { border-top-width: 6px; padding-top: 9px; }
+.send { min-height: 48px; padding: 0 20px; background: var(--fill); color: var(--fill-text); border: 2px solid var(--fill); font-family: var(--display); font-weight: 700; font-size: 15px; }
+.send:disabled { background: transparent; color: var(--ink); border-color: var(--ink); }
+.chat-clear { align-self: center; }
+
+/* Before the first message the composer is the desk's question field. */
+.chat--empty .composer, .chat--empty .composer:focus-within { position: static; grid-template-columns: minmax(0, 1fr); gap: 20px; margin-top: 12px; padding: 0; border-top: 0; }
+.chat--empty .composer textarea { padding: 10px 0; border-top: 3px solid var(--ink); border-bottom: 3px solid var(--ink); font: 900 27px/1.12 var(--display); }
+.chat--empty .composer textarea:focus-visible { border-top-width: 6px; border-bottom-width: 6px; padding: 7px 0; }
+.chat--empty .send { min-height: 54px; width: 100%; }
+
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }

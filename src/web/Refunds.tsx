@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CHECK_LABELS, COUNTER_MAX, COUNTER_REASONS, COUNTER_WEEK_MAX, MANAGER_QUESTIONS, type Claim, type CostToYou, type CounterReason, type CounterResult, type Want } from '../shared/desk';
+import { CHECK_LABELS, COUNTER_MAX, COUNTER_REASONS, MANAGER_QUESTIONS, type Claim, type CostToYou, type CounterReason, type CounterResult, type Want } from '../shared/desk';
 import { callNumber, fmt, tkn, type Call, type Store } from './store';
 
 export function Counter({ call, store, onPick, onManager, onBack }: { call: Call; store: Store; onPick: (r: CounterReason) => CounterResult | null; onManager: () => void; onBack: () => void }) {
@@ -14,7 +14,7 @@ export function Counter({ call, store, onPick, onManager, onBack }: { call: Call
     <section className="counter">
       <h1 className="headline">Counter</h1>
       <p className="machine">
-        call {callNumber(call.n)} · limit {COUNTER_MAX} tkn · used this week {fmt(store.counterWeek)} of {fmt(COUNTER_WEEK_MAX)}
+        call {callNumber(call.n)} · limit {COUNTER_MAX} tkn
       </p>
       <h2 className="kicker ruled">What was wrong?</h2>
       <ul className="optionlist">
@@ -126,17 +126,12 @@ export function Manager({ call, busy, problem, onDecide, onRedo, onBack }: { cal
     const d = r.decision;
     const title = { approved: 'Approved', partly: 'Partly approved', denied: 'Denied' }[d.outcome];
     const refundLine = d.lines.length ? `${fmt(d.refund)} tkn, ${d.lines.map((l) => l.label.replace(/^about /, '')).join(' and ')}` : 'none';
-    const why = [
-      r.checks.covered ? 'The answer covered the call.' : 'The answer did not cover the call.',
-      d.refund > 0 ? `${r.note} ${fmt(d.refund)} tkn come back.` : d.outcome === 'denied' ? 'Every check passed. A free redo is open on this call.' : '',
-    ]
-      .filter(Boolean)
-      .join(' ');
+    const why = d.refund > 0 ? r.note : '';
     return (
       <section className="manager">
         <h1 className="headline">Manager</h1>
         <p className="machine">
-          call {callNumber(call.n)} · charged {fmt(charged)} tkn · counter limit {COUNTER_MAX} tkn
+          call {callNumber(call.n)} · charged {fmt(charged)} tkn
         </p>
         {answered}
         <h2 className="kicker ruled">Checked</h2>
@@ -151,8 +146,6 @@ export function Manager({ call, busy, problem, onDecide, onRedo, onBack }: { cal
         <div className="sheet receipt">
           <p className="receipt-title">Decision receipt {r.n} · {title}</p>
           <dl className="slip-lines">
-            <dt>Found</dt>
-            <dd>{cap(d.found)}</dd>
             <dt>Refund</dt>
             <dd>
               {refundLine}
@@ -164,7 +157,7 @@ export function Manager({ call, busy, problem, onDecide, onRedo, onBack }: { cal
             <dd>A person reviews appeals within seven days</dd>
           </dl>
         </div>
-        <p className="lede-s">{why}</p>
+        {why && <p className="lede-s">{why}</p>}
         <div className="stack">
           {d.redo ? (
             <button className="primary wide" disabled={busy} onClick={onRedo}>
@@ -179,7 +172,6 @@ export function Manager({ call, busy, problem, onDecide, onRedo, onBack }: { cal
             Ask a person to review this
           </button>
         </div>
-        <p className="machine">the receipt stays with the call</p>
       </section>
     );
   }
