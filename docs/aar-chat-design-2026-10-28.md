@@ -45,6 +45,6 @@ No change to the request or the worker, so a break here is visual. The risk is t
 **Decided by the owner:** the decision receipt's Found line repeated the checks list above it. Ron asked for it cut, so it is gone from the receipt, from the four manager boards on the design canvas, and from the screens on ronbronson.dev. The Register still lists counter refunds for the week.
 
 ## 6. Change: what happens next
-- Ron reviews the screenshots, the new strings, and the receipt question before merge.
+- Ron approved the reused placeholder and the new strings (`reasoning`, `first token`, `tokens/s`) and asked for the merge on 27 October.
 - If `/chat` is going to stay, add a board for it to the design canvas so the next build works from a spec.
 - Keep rendering against a streaming mock before calling chat work done; the earlier blank page bug only showed with a real stream.
